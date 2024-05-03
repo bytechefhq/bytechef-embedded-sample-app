@@ -1,0 +1,28 @@
+{
+  "name": "bytechef-embedded-sample-app-backend",
+  "version": "1.0.0",
+  "description": "Backend for bytechef-embedded-sample-app with JWT token generation",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "fastify": "^4.24.0",
+    "@fastify/cors": "^8.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.6.9"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/node-fetch": "^2.6.4",
+    "typescript": "^5.0.4",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "nodemon": "^3.0.1"
+  }
+}

@@ -66,7 +66,7 @@ interface EmbeddedWorkflowBuilderProps {
  * @param props - The configuration options for the embedded workflow builder
  * @returns A React component that renders the embedded workflow builder
  */
-const EmbeddedWorkflowBuilder = ({baseUrl = 'http://127.0.0.1:5173', connectionDialogAllowed, environment = 'PRODUCTION', includeComponents, jwtToken, sharedConnectionIds, workflowReferenceCode}:EmbeddedWorkflowBuilderProps) => {
+const EmbeddedWorkflowBuilder = ({baseUrl = 'https://app.bytechef.io', connectionDialogAllowed, environment = 'PRODUCTION', includeComponents, jwtToken, sharedConnectionIds, workflowReferenceCode}:EmbeddedWorkflowBuilderProps) => {
   /**
    * Handles the iframe load event.
    *

@@ -17,8 +17,14 @@ const BYTECHEF_PRIVATE_KEY = process.env.BYTECHEF_PRIVATE_KEY;
 const BYTECHEF_KID = process.env.BYTECHEF_KID;
 
 // Check if private key is provided
-if (!BYTECHEF_PRIVATE_KEY) {
+if (!BYTECHEF_PRIVATE_KEY && !BYTECHEF_KID) {
   console.error('Error: BYTECHEF_PRIVATE_KEY environment variable is required');
+  process.exit(1);
+}
+
+// Check if kid is provided
+if (!BYTECHEF_KID) {
+  console.error('Error: BYTECHEF_KID environment variable is required');
   process.exit(1);
 }
 

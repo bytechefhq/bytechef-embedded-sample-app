@@ -1,4 +1,4 @@
-// import { EmbeddedWorkflowBuilder } from "@bytechef-embedded/react";
+// import { EmbeddedWorkflowBuilder } from "@bytechef/embedded-react";
 import EmbeddedWorkflowBuilder from "@/app/automations/[workflowReferenceCode]/EmbeddedWorkflowBuilder";
 import {getToken} from "@/lib/api";
 
@@ -8,7 +8,7 @@ export default async function AutomationPage({params}: {params: {workflowReferen
   const jwtToken = await getToken();
 
   return <EmbeddedWorkflowBuilder
-    baseUrl={`${process.env.BYTECHEF_APP_BASE_URL??'http://localhost:5173'}`}
+    baseUrl={`${process.env.BYTECHEF_APP_BASE_URL??'http://127.0.0.1:5173'}`}
     connectionDialogAllowed={true}
     environment={'DEVELOPMENT'}
     includeComponents={['slack', 'productboard', 'googleMail']}

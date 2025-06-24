@@ -60,8 +60,8 @@ export async function fetchWorkflows(): Promise<Workflow[]> {
  * @returns Promise that resolves to the fetch response
  */
 export async function enableWorkflow(workflowReferenceCode: string, enable: boolean): Promise<Response> {
-  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowReferenceCode}/enable/${enable}`, {
-    method: 'PATCH'
+  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowReferenceCode}/enable`, {
+    method: enable ? 'POST' : 'DELETE'
   });
 }
 

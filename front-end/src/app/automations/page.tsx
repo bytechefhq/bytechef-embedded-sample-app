@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { fetchWorkflows, enableWorkflow, deleteWorkflow, Workflow } from "@/lib/api";
 
 export default function AutomationsPage() {
-  const [workflows, setWorkflow] = useState<Workflow[] | undefined>();
+  const [workflows, setWorkflows] = useState<Workflow[] | undefined>();
   const [isLoading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export default function AutomationsPage() {
     setLoading(true);
     fetchWorkflows()
       .then((data) => {
-        setWorkflow(data);
+        setWorkflows(data);
         setLoading(false);
       })
       .catch((err) => {

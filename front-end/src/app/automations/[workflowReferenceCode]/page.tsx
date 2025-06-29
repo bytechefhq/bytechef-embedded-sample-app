@@ -3,7 +3,7 @@ import EmbeddedWorkflowBuilder from "@/app/automations/[workflowReferenceCode]/E
 import {getToken} from "@/lib/api";
 
 export default async function AutomationPage({params}: {params: {workflowReferenceCode: string}}) {
-  const workflowReferenceCode = params.workflowReferenceCode as string;
+  const { workflowReferenceCode } = await params;
 
   const jwtToken = await getToken();
 

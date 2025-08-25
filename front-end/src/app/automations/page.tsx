@@ -51,11 +51,13 @@ export default function AutomationsPage() {
       .then((res) => {
         if (res.ok) {
           setSuccess("Workflow deleted successfully!");
-          fetchWorkflows();
+          fetchWorkflows().then((data) => {
+            setWorkflows(data);
+            setLoading(false);
+          });
         } else {
           throw new Error("Failed to delete workflow");
         }
-        setLoading(false);
       })
       .catch((err) => {
         setError("Failed to delete workflow: " + err.message);

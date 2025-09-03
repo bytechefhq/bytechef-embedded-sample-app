@@ -1,9 +1,9 @@
 // import { EmbeddedWorkflowBuilder } from "@bytechef/embedded-react";
-import EmbeddedWorkflowBuilder from "@/app/automations/[workflowReferenceCode]/EmbeddedWorkflowBuilder";
+import EmbeddedWorkflowBuilder from "@/app/automations/[workflowUuid]/EmbeddedWorkflowBuilder";
 import {getToken} from "@/lib/api";
 
-export default async function AutomationPage({params}: {params: {workflowReferenceCode: string}}) {
-  const { workflowReferenceCode } = await params;
+export default async function AutomationPage({params}: {params: {workflowUuid: string}}) {
+  const { workflowUuid } = await params;
 
   const jwtToken = await getToken();
 
@@ -14,5 +14,5 @@ export default async function AutomationPage({params}: {params: {workflowReferen
     includeComponents={['slack', 'productboard', 'googleMail']}
     jwtToken={jwtToken}
     sharedConnectionIds={[1072]}
-    workflowReferenceCode={workflowReferenceCode} />;
+    workflowUuid={workflowUuid} />;
 }

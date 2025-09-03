@@ -28,26 +28,26 @@ export default function AutomationsPage() {
       });
   };
 
-  const toggleWorkflowEnabled = (workflowReferenceCode: string, enable: boolean) => {
+  const toggleWorkflowEnabled = (workflowUuid: string, enable: boolean) => {
     setLoading(true);
-    enableWorkflow(workflowReferenceCode, enable)
+    enableWorkflow(workflowUuid, enable)
       .then(() => {
         setLoading(false);
         fetchWorkflowsData();
       })
       .catch((err) => {
-        setError("Failed to enable workflow workflowReferenceCode: " + workflowReferenceCode + ": " + err.message);
+        setError("Failed to enable workflow workflowUuid: " + workflowUuid + ": " + err.message);
         setLoading(false);
       });
   };
 
-  const handleDeleteWorkflow = (workflowReferenceCode: string) => {
+  const handleDeleteWorkflow = (workflowUuid: string) => {
     if (!confirm("Are you sure you want to delete this workflow? This action cannot be undone.")) {
       return;
     }
 
     setLoading(true);
-    deleteWorkflow(workflowReferenceCode)
+    deleteWorkflow(workflowUuid)
       .then((res) => {
         if (res.ok) {
           setSuccess("Workflow deleted successfully!");
@@ -112,11 +112,11 @@ export default function AutomationsPage() {
           {workflows && workflows.length > 0 ? (
             <ul role="list" className="divide-y divide-gray-100 overflow-hidden bg-white shadow-xs ring-1 ring-gray-900/5 sm:rounded-xl">
               {workflows.map((workflow) => (
-                <li key={workflow.workflowReferenceCode} className="relative flex justify-between gap-x-6 px-6 py-5 hover:bg-muted/40">
+                <li key={workflow.workflowUuid} className="relative flex justify-between gap-x-6 px-6 py-5 hover:bg-muted/40">
                   <div className="flex min-w-0 gap-x-4">
                     <div className="min-w-0 flex-auto">
                       <div className="text-sm font-semibold text-foreground">
-                        <a href={`/automations/${workflow.workflowReferenceCode}`}>
+                        <a href={`/automations/${workflow.workflowUuid}`}>
                           <span className="absolute inset-x-0 -top-px bottom-0 right-32" />
                           {workflow.label}
                           <Badge variant="outline" className="ml-2 text-xs font-normal">
@@ -132,11 +132,11 @@ export default function AutomationsPage() {
                   <div className="flex shrink-0 items-center gap-x-4">
                     <div className="hidden sm:flex sm:flex-col sm:items-end">
                       <p className="text-sm text-muted-foreground">
-                        {workflow.workflowReferenceCode || "No reference code"}
+                        {workflow.workflowUuid || "No reference code"}
                       </p>
                     </div>
 
-                    <Switch disabled={!workflow.workflowVersion} checked={workflow.enabled} onCheckedChange={() => toggleWorkflowEnabled(workflow.workflowReferenceCode!, !workflow.enabled)} />
+                    <Switch disabled={!workflow.workflowVersion} checked={workflow.enabled} onCheckedChange={() => toggleWorkflowEnabled(workflow.workflowUuid!, !workflow.enabled)} />
 
                     <Button
                       variant="ghost"
@@ -144,7 +144,7 @@ export default function AutomationsPage() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleDeleteWorkflow(workflow.workflowReferenceCode!);
+                        handleDeleteWorkflow(workflow.workflowUuid!);
                       }}
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       title="Delete workflow"

@@ -28,7 +28,7 @@ export interface Workflow {
   enabled: boolean;
   label: string;
   name: string;
-  workflowReferenceCode?: string;
+  workflowUuid?: string;
   workflowVersion?: number;
 }
 
@@ -55,23 +55,23 @@ export async function fetchWorkflows(): Promise<Workflow[]> {
 
 /**
  * Enable or disable a workflow
- * @param workflowReferenceCode The reference code of the workflow
+ * @param workflowUuid The uuid of the workflow
  * @param enable Whether to enable or disable the workflow
  * @returns Promise that resolves to the fetch response
  */
-export async function enableWorkflow(workflowReferenceCode: string, enable: boolean): Promise<Response> {
-  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowReferenceCode}/enable`, {
+export async function enableWorkflow(workflowUuid: string, enable: boolean): Promise<Response> {
+  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowUuid}/enable`, {
     method: enable ? 'POST' : 'DELETE'
   });
 }
 
 /**
  * Delete a workflow
- * @param workflowReferenceCode The reference code of the workflow
+ * @param workflowUuid The uuid of the workflow
  * @returns Promise that resolves to the fetch response
  */
-export async function deleteWorkflow(workflowReferenceCode: string): Promise<Response> {
-  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowReferenceCode}`, {
+export async function deleteWorkflow(workflowUuid: string): Promise<Response> {
+  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowUuid}`, {
     method: 'DELETE'
   });
 }

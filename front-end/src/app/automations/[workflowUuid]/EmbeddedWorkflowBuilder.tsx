@@ -50,10 +50,10 @@ interface EmbeddedWorkflowBuilderProps {
   sharedConnectionIds: number[];
 
   /**
-   * The unique reference code for the workflow being edited.
+   * The uuid for the workflow being edited.
    * This is used to load the correct workflow in the builder.
    */
-  workflowReferenceCode: string
+  workflowUuid: string
 }
 
 /**
@@ -66,7 +66,7 @@ interface EmbeddedWorkflowBuilderProps {
  * @param props - The configuration options for the embedded workflow builder
  * @returns A React component that renders the embedded workflow builder
  */
-const EmbeddedWorkflowBuilder = ({baseUrl = 'https://app.bytechef.io', connectionDialogAllowed, environment = 'PRODUCTION', includeComponents, jwtToken, sharedConnectionIds, workflowReferenceCode}:EmbeddedWorkflowBuilderProps) => {
+const EmbeddedWorkflowBuilder = ({baseUrl = 'https://app.bytechef.io', connectionDialogAllowed, environment = 'PRODUCTION', includeComponents, jwtToken, sharedConnectionIds, workflowUuid}:EmbeddedWorkflowBuilderProps) => {
   /**
    * Handles the iframe load event.
    *
@@ -94,7 +94,7 @@ const EmbeddedWorkflowBuilder = ({baseUrl = 'https://app.bytechef.io', connectio
   return (
     <div className="absolute inset-0 lg:pl-72">
       <iframe
-        src={`${baseUrl}/embedded/workflow-builder/${workflowReferenceCode}`}
+        src={`${baseUrl}/embedded/workflow-builder/${workflowUuid}`}
         width="100%"
         height="100%"
         style={{ border: "none" }}

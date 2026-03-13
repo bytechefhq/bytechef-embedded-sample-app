@@ -1,7 +1,7 @@
 'use client'
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist } from "next/font/google";
 import "./globals.css";
 
 import Link from "next/link";
@@ -12,20 +12,27 @@ import {
   FilesIcon,
   FoldersIcon,
   HomeIcon,
+  MessageCircleIcon,
   SquareIcon,
   UsersIcon,
   WorkflowIcon
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"] });
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Team', href: '/team', icon: UsersIcon },
-  { name: 'Projects', href: '/projects', icon: FoldersIcon },
-  { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
-  { name: 'Documents', href: '/documents', icon: FilesIcon },
-  { name: 'Reports', href: '/reports', icon: ChartPieIcon },
+  // { name: 'Team', href: '/team', icon: UsersIcon },
+  // { name: 'Projects', href: '/projects', icon: FoldersIcon },
+  // { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
+  // { name: 'Documents', href: '/documents', icon: FilesIcon },
+  // { name: 'Reports', href: '/reports', icon: ChartPieIcon },
+  { name: 'ActionKit Playground', href: '/action-kit', icon: FoldersIcon },
+  { name: 'Chat MCP', href: '/chat-mcp', icon: MessageCircleIcon },
+  { name: 'Chat ToolKit', href: '/chat-tool-kit', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },
   { name: 'Integrations', href: '/integrations', icon: SquareIcon },
 ]
@@ -42,8 +49,8 @@ export default function RootLayout({
   const pathname = usePathname();
 
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+      <body className={inter.className} suppressHydrationWarning>
         <div>
           {/* Static sidebar for desktop */}
           <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">

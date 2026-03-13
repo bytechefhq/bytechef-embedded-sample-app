@@ -8,7 +8,7 @@ const DEFAULT_BACKEND_APP_BASE_URL = 'http://localhost:3001';
 const DEFAULT_BYTECHEF_APP_BASE_URL = 'http://localhost:5173';
 
 const DEFAULT_USER_PAYLOAD = {
-    externalUserId: '1234567890',
+    externalUserId: process.env.NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID || '1234567890',
     name: 'John Doe'
 } as const;
 

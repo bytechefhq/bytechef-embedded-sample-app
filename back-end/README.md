@@ -43,17 +43,19 @@ The server can be configured using environment variables or the `.env` file:
 
 - `PORT`: The port on which the server will run (default: 3001)
 - `TOKEN_EXPIRY`: The expiry time for generated tokens (default: 1h)
-- `BYTECHEF_PRIVATE_KEY`: The private key used for signing JWT tokens (required, obtained from API keys settings)
-- `BYTECHEF_KID`: The key ID to include in the JWT header (required, obtained from API keys settings)
+- `BYTECHEF_PRIVATE_KEY`: The private key used for signing JWT tokens (required, obtained from Signing Keys settings)
+- `BYTECHEF_KID`: The key ID to include in the JWT header (required, obtained from Signing Keys settings)
 
 ## Getting the Private Key and KID
 
 To obtain the private key and KID required for JWT token generation:
 
-1. Enable the feature flag `ff-520` in your ByteChef environment
-2. Navigate to `/embedded/settings/api-keys` in your ByteChef application
-3. Create a new API key or use an existing one
-4. The private key and KID will be displayed - copy these values to your `.env` file
+1. Navigate to `/embedded/settings/signing-keys` in your ByteChef application
+2. Click **New Signing Key**, give it a name, and click **Save**
+3. The private key is displayed once — copy it to the `BYTECHEF_PRIVATE_KEY` entry in your `.env` file before closing the dialog
+4. After closing, copy the new key's **Key Id** from the table into `BYTECHEF_KID`
+
+> Use **Signing Keys** (not **API Keys**) for this sample. Signing Keys produce an RSA keypair and a `kid` so this back-end can mint RS256-signed JWTs for end-user sessions. API Keys are a separate concept — single-secret bearer tokens for server-to-server admin API calls, with no private key or `kid`.
 
 ## Running the Server
 

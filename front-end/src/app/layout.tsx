@@ -35,8 +35,8 @@ const navigation = [
   { name: 'ActionKit Playground', href: '/action-kit', icon: FoldersIcon },
   { name: 'App Event Playground', href: '/app-event', icon: ZapIcon },
   { name: 'Request Playground', href: '/request', icon: WebhookIcon },
-  { name: 'Chat MCP', href: '/chat-mcp', icon: MessageCircleIcon },
-  { name: 'Chat ToolKit', href: '/chat-tool-kit', icon: MessageCircleIcon },
+  { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },
+  { name: 'Toolkit Chat', href: '/chat-tool-kit', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },
   { name: 'Integrations', href: '/integrations', icon: SquareIcon },
 ]

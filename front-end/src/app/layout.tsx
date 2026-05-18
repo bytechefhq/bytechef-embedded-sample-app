@@ -15,7 +15,9 @@ import {
   MessageCircleIcon,
   SquareIcon,
   UsersIcon,
-  WorkflowIcon
+  WebhookIcon,
+  WorkflowIcon,
+  ZapIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +33,8 @@ const navigation = [
   // { name: 'Documents', href: '/documents', icon: FilesIcon },
   // { name: 'Reports', href: '/reports', icon: ChartPieIcon },
   { name: 'ActionKit Playground', href: '/action-kit', icon: FoldersIcon },
+  { name: 'App Event Playground', href: '/app-event', icon: ZapIcon },
+  { name: 'Request Playground', href: '/request', icon: WebhookIcon },
   { name: 'Chat MCP', href: '/chat-mcp', icon: MessageCircleIcon },
   { name: 'Chat ToolKit', href: '/chat-tool-kit', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },

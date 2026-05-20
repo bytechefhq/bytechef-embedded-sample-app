@@ -5,9 +5,9 @@ import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { DefaultChatTransport } from "ai";
 
-export default function ChatToolkitPage() {
+export default function ChatComponentKitPage() {
   const runtime = useChatRuntime({
-    transport: new DefaultChatTransport({ api: "/api/chat-tool-kit" }),
+    transport: new DefaultChatTransport({ api: "/api/chat-component-kit" }),
   });
 
   return (

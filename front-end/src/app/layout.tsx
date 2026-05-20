@@ -36,7 +36,7 @@ const navigation = [
   { name: 'App Event Playground', href: '/app-event', icon: ZapIcon },
   { name: 'Request Playground', href: '/request', icon: WebhookIcon },
   { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },
-  { name: 'Toolkit Chat', href: '/chat-tool-kit', icon: MessageCircleIcon },
+  { name: 'ComponentKit Chat', href: '/chat-component-kit', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },
   { name: 'Integrations', href: '/integrations', icon: SquareIcon },
 ]

@@ -37,18 +37,18 @@ export interface CreateWorkflowPayload {
   description: string;
 }
 
-// Workflow template interfaces
-export interface WorkflowTemplateComponent {
-  name: string;
-  title?: string;
-  icon?: string;
-}
-
-export interface WorkflowTemplate {
+// Automation workflow project interfaces
+export interface AutomationWorkflowProjectWorkflow {
   id: string;
   label: string;
   description: string;
-  components: WorkflowTemplateComponent[];
+}
+
+export interface AutomationWorkflowProject {
+  id: number;
+  name: string;
+  description: string;
+  workflows: AutomationWorkflowProjectWorkflow[];
 }
 
 /**
@@ -120,33 +120,33 @@ export async function createWorkflow(payload: CreateWorkflowPayload): Promise<Re
 }
 
 /**
- * Fetch all workflow templates
- * @returns Promise that resolves to an array of workflow templates
+ * Fetch all automation workflow projects (grouped by project, with their workflows)
+ * @returns Promise that resolves to an array of automation workflow projects
  */
-export async function fetchWorkflowTemplates(): Promise<WorkflowTemplate[]> {
-  const response = await fetchWithAuth('/api/embedded/v1/automation/workflow-templates', {
+export async function fetchAutomationWorkflowProjects(): Promise<AutomationWorkflowProject[]> {
+  const response = await fetchWithAuth('/api/embedded/v1/automation/projects', {
     method: 'GET'
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch workflow templates: ${response.status}`);
+    throw new Error(`Failed to fetch automation workflow projects: ${response.status}`);
   }
 
   return response.json();
 }
 
 /**
- * Copy a workflow template into a new workflow for the current user
- * @param templateId The id of the workflow template
+ * Copy a workflow into a new workflow for the current user
+ * @param workflowId The id of the workflow to copy
  * @returns Promise that resolves to the uuid of the newly created workflow
  */
-export async function copyWorkflowTemplate(templateId: string): Promise<string> {
-  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflow-templates/${templateId}/copy`, {
+export async function copyWorkflow(workflowId: string): Promise<string> {
+  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowId}/copy`, {
     method: 'POST'
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to copy workflow template: ${response.status}`);
+    throw new Error(`Failed to copy workflow: ${response.status}`);
   }
 
   const workflowUuid = (await response.text()).trim();

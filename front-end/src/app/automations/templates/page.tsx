@@ -5,41 +5,43 @@ import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { copyWorkflowTemplate, fetchWorkflowTemplates, WorkflowTemplate } from "@/lib/api";
+import { AutomationWorkflowProject, copyWorkflow, fetchAutomationWorkflowProjects } from "@/lib/api";
 
 export default function WorkflowTemplatesPage() {
   const router = useRouter();
 
-  const [templates, setTemplates] = useState<WorkflowTemplate[] | undefined>();
+  const [projects, setProjects] = useState<AutomationWorkflowProject[] | undefined>();
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
+  const [creatingWorkflowId, setCreatingWorkflowId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchWorkflowTemplates()
+    fetchAutomationWorkflowProjects()
       .then((data) => {
-        setTemplates(data);
+        setProjects(data);
         setLoading(false);
       })
       .catch(() => {
-        setError("Failed to fetch workflow templates");
+        setError("Failed to fetch workflow catalog");
         setLoading(false);
       });
   }, []);
 
-  const handleSelectTemplate = (templateId: string) => {
-    setCreatingTemplateId(templateId);
+  const handleSelectWorkflow = (workflowId: string) => {
+    setCreatingWorkflowId(workflowId);
     setError(null);
 
-    copyWorkflowTemplate(templateId)
+    copyWorkflow(workflowId)
       .then((workflowUuid) => {
         router.push(`/automations/${workflowUuid}`);
       })
       .catch(() => {
         setError("Failed to create a workflow from the selected template");
-        setCreatingTemplateId(null);
+        setCreatingWorkflowId(null);
       });
   };
+
+  const hasWorkflows = projects && projects.some((project) => project.workflows.length > 0);
 
   return (
     <div className="flex justify-center w-full">
@@ -65,45 +67,44 @@ export default function WorkflowTemplatesPage() {
 
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground">Loading...</div>
-        ) : templates && templates.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((template) => (
-              <Card
-                key={template.id}
-                role="button"
-                aria-disabled={creatingTemplateId !== null}
-                onClick={() => creatingTemplateId === null && handleSelectTemplate(template.id)}
-                className="cursor-pointer transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
-              >
-                <CardHeader>
-                  <CardTitle className="text-base">{template.label}</CardTitle>
-                  <CardDescription>
-                    {creatingTemplateId === template.id
-                      ? "Creating workflow..."
-                      : template.description || "No description provided"}
-                  </CardDescription>
+        ) : hasWorkflows ? (
+          <div className="flex flex-col gap-8">
+            {projects!.map((project) => (
+              <section key={project.id}>
+                <div className="mb-3">
+                  <h2 className="text-lg font-semibold">{project.name}</h2>
 
-                  {template.components.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 pt-2">
-                      {template.components.map((component) => (
-                        <span
-                          key={component.name}
-                          title={component.title || component.name}
-                          className="flex size-9 items-center justify-center rounded-full border border-border bg-background p-1.5"
-                        >
-                          {component.icon && (
-                            <img
-                              src={`data:image/svg+xml;utf8,${encodeURIComponent(component.icon)}`}
-                              alt={component.title || component.name}
-                              className="size-full"
-                            />
-                          )}
-                        </span>
-                      ))}
-                    </div>
+                  {project.description && (
+                    <p className="text-sm text-muted-foreground">{project.description}</p>
                   )}
-                </CardHeader>
-              </Card>
+                </div>
+
+                {project.workflows.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {project.workflows.map((workflow) => (
+                      <Card
+                        key={workflow.id}
+                        role="button"
+                        aria-disabled={creatingWorkflowId !== null}
+                        onClick={() => creatingWorkflowId === null && handleSelectWorkflow(workflow.id)}
+                        className="cursor-pointer transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-base">{workflow.label}</CardTitle>
+
+                          <CardDescription>
+                            {creatingWorkflowId === workflow.id
+                              ? "Creating workflow..."
+                              : workflow.description || "No description provided"}
+                          </CardDescription>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">No workflows available in this project.</p>
+                )}
+              </section>
             ))}
           </div>
         ) : (

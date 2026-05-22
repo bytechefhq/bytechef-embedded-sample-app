@@ -1,9 +1,16 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDownIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import CreateWorkflowDialog from "./components/create-workflow-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {Switch} from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { fetchWorkflows, enableWorkflow, deleteWorkflow, Workflow } from "@/lib/api";
@@ -14,6 +21,8 @@ export default function AutomationsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const fetchWorkflowsData = () => {
     setLoading(true);
@@ -90,10 +99,38 @@ export default function AutomationsPage() {
         <div className="w-full flex justify-between items-center py-4">
           <h1 className="text-xl font-semibold">Workflows</h1>
 
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Create Workflow
-          </Button>
+          <div className="flex">
+            <Button
+              onClick={() => router.push("/automations/templates")}
+              className="rounded-r-none"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              New from Template
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    aria-label="More create options"
+                    className="rounded-l-none border-l border-l-primary-foreground/20 px-2"
+                  />
+                }
+              >
+                <ChevronDownIcon className="h-4 w-4" />
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => router.push("/automations/templates")}>
+                  New from Template
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
+                  New from Scratch
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {error && (

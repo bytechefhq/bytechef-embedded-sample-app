@@ -37,6 +37,13 @@ export interface CreateWorkflowPayload {
   description: string;
 }
 
+// Workflow template interface
+export interface WorkflowTemplate {
+  id: string;
+  label: string;
+  description: string;
+}
+
 /**
  * Fetch all workflows
  * @returns Promise that resolves to an array of workflows
@@ -103,6 +110,44 @@ export async function createWorkflow(payload: CreateWorkflowPayload): Promise<Re
       }`
     })
   });
+}
+
+/**
+ * Fetch all workflow templates
+ * @returns Promise that resolves to an array of workflow templates
+ */
+export async function fetchWorkflowTemplates(): Promise<WorkflowTemplate[]> {
+  const response = await fetchWithAuth('/api/embedded/v1/automation/workflow-templates', {
+    method: 'GET'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch workflow templates: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Copy a workflow template into a new workflow for the current user
+ * @param templateId The id of the workflow template
+ * @returns Promise that resolves to the uuid of the newly created workflow
+ */
+export async function copyWorkflowTemplate(templateId: string): Promise<string> {
+  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflow-templates/${templateId}/copy`, {
+    method: 'POST'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to copy workflow template: ${response.status}`);
+  }
+
+  const workflowUuid = (await response.text()).trim();
+
+  // The endpoint may return the uuid as a JSON string or as plain text.
+  return workflowUuid.startsWith('"') && workflowUuid.endsWith('"')
+    ? workflowUuid.slice(1, -1)
+    : workflowUuid;
 }
 
 /**

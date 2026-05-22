@@ -82,6 +82,26 @@ export default function WorkflowTemplatesPage() {
                       ? "Creating workflow..."
                       : template.description || "No description provided"}
                   </CardDescription>
+
+                  {template.components.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      {template.components.map((component) => (
+                        <span
+                          key={component.name}
+                          title={component.title || component.name}
+                          className="flex size-9 items-center justify-center rounded-full border border-border bg-background p-1.5"
+                        >
+                          {component.icon && (
+                            <img
+                              src={`data:image/svg+xml;utf8,${encodeURIComponent(component.icon)}`}
+                              alt={component.title || component.name}
+                              className="size-full"
+                            />
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
               </Card>
             ))}

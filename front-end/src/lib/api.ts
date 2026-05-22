@@ -37,11 +37,18 @@ export interface CreateWorkflowPayload {
   description: string;
 }
 
-// Workflow template interface
+// Workflow template interfaces
+export interface WorkflowTemplateComponent {
+  name: string;
+  title?: string;
+  icon?: string;
+}
+
 export interface WorkflowTemplate {
   id: string;
   label: string;
   description: string;
+  components: WorkflowTemplateComponent[];
 }
 
 /**

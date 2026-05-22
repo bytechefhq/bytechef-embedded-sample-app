@@ -38,10 +38,17 @@ export interface CreateWorkflowPayload {
 }
 
 // Automation workflow project interfaces
+export interface AutomationWorkflowProjectComponent {
+  name: string;
+  title: string;
+  icon: string;
+}
+
 export interface AutomationWorkflowProjectWorkflow {
   id: string;
   label: string;
   description: string;
+  components: AutomationWorkflowProjectComponent[];
 }
 
 export interface AutomationWorkflowProject {

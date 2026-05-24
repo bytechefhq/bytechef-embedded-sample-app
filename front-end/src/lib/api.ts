@@ -44,7 +44,7 @@ export interface AutomationWorkflowProjectComponent {
   icon: string;
 }
 
-export interface AutomationWorkflowProjectWorkflow {
+export interface AutomationWorkflowProjectWorkflowTemplate {
   id: string;
   label: string;
   description: string;
@@ -55,7 +55,7 @@ export interface AutomationWorkflowProject {
   id: number;
   name: string;
   description: string;
-  workflows: AutomationWorkflowProjectWorkflow[];
+  workflowTemplates: AutomationWorkflowProjectWorkflowTemplate[];
 }
 
 /**
@@ -127,7 +127,7 @@ export async function createWorkflow(payload: CreateWorkflowPayload): Promise<Re
 }
 
 /**
- * Fetch all automation workflow projects (grouped by project, with their workflows)
+ * Fetch all automation workflow projects (grouped by project, with their workflow templates)
  * @returns Promise that resolves to an array of automation workflow projects
  */
 export async function fetchAutomationWorkflowProjects(): Promise<AutomationWorkflowProject[]> {
@@ -143,25 +143,25 @@ export async function fetchAutomationWorkflowProjects(): Promise<AutomationWorkf
 }
 
 /**
- * Copy a workflow into a new workflow for the current user
- * @param workflowId The id of the workflow to copy
+ * Copy a workflow template into a new workflow for the current user
+ * @param workflowUuid The uuid of the workflow template to copy
  * @returns Promise that resolves to the uuid of the newly created workflow
  */
-export async function copyWorkflow(workflowId: string): Promise<string> {
-  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowId}/copy`, {
+export async function copyWorkflowTemplate(workflowUuid: string): Promise<string> {
+  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflow-templates/${workflowUuid}/copy`, {
     method: 'POST'
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to copy workflow: ${response.status}`);
+    throw new Error(`Failed to copy workflow template: ${response.status}`);
   }
 
-  const workflowUuid = (await response.text()).trim();
+  const newWorkflowUuid = (await response.text()).trim();
 
   // The endpoint may return the uuid as a JSON string or as plain text.
-  return workflowUuid.startsWith('"') && workflowUuid.endsWith('"')
-    ? workflowUuid.slice(1, -1)
-    : workflowUuid;
+  return newWorkflowUuid.startsWith('"') && newWorkflowUuid.endsWith('"')
+    ? newWorkflowUuid.slice(1, -1)
+    : newWorkflowUuid;
 }
 
 /**

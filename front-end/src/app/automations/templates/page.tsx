@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AutomationWorkflowProject, copyWorkflow, fetchAutomationWorkflowProjects } from "@/lib/api";
+import { AutomationWorkflowProject, copyWorkflowTemplate, fetchAutomationWorkflowProjects } from "@/lib/api";
 
 export default function WorkflowTemplatesPage() {
   const router = useRouter();
@@ -27,11 +27,11 @@ export default function WorkflowTemplatesPage() {
       });
   }, []);
 
-  const handleSelectWorkflow = (workflowId: string) => {
-    setCreatingWorkflowId(workflowId);
+  const handleSelectWorkflowTemplate = (workflowTemplateUuid: string) => {
+    setCreatingWorkflowId(workflowTemplateUuid);
     setError(null);
 
-    copyWorkflow(workflowId)
+    copyWorkflowTemplate(workflowTemplateUuid)
       .then((workflowUuid) => {
         router.push(`/automations/${workflowUuid}`);
       })
@@ -41,7 +41,7 @@ export default function WorkflowTemplatesPage() {
       });
   };
 
-  const hasWorkflows = projects && projects.some((project) => project.workflows.length > 0);
+  const hasWorkflowTemplates = projects && projects.some((project) => project.workflowTemplates.length > 0);
 
   return (
     <div className="flex justify-center w-full">
@@ -67,7 +67,7 @@ export default function WorkflowTemplatesPage() {
 
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground">Loading...</div>
-        ) : hasWorkflows ? (
+        ) : hasWorkflowTemplates ? (
           <div className="flex flex-col gap-8">
             {projects!.map((project) => (
               <section key={project.id}>
@@ -79,28 +79,28 @@ export default function WorkflowTemplatesPage() {
                   )}
                 </div>
 
-                {project.workflows.length > 0 ? (
+                {project.workflowTemplates.length > 0 ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {project.workflows.map((workflow) => (
+                    {project.workflowTemplates.map((workflowTemplate) => (
                       <Card
-                        key={workflow.id}
+                        key={workflowTemplate.id}
                         role="button"
                         aria-disabled={creatingWorkflowId !== null}
-                        onClick={() => creatingWorkflowId === null && handleSelectWorkflow(workflow.id)}
+                        onClick={() => creatingWorkflowId === null && handleSelectWorkflowTemplate(workflowTemplate.id)}
                         className="cursor-pointer transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
                       >
                         <CardHeader>
-                          <CardTitle className="text-base">{workflow.label}</CardTitle>
+                          <CardTitle className="text-base">{workflowTemplate.label}</CardTitle>
 
                           <CardDescription>
-                            {creatingWorkflowId === workflow.id
+                            {creatingWorkflowId === workflowTemplate.id
                               ? "Creating workflow..."
-                              : workflow.description || "No description provided"}
+                              : workflowTemplate.description || "No description provided"}
                           </CardDescription>
 
-                          {workflow.components.length > 0 && (
+                          {workflowTemplate.components.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2 pt-2">
-                              {workflow.components.map((component) => (
+                              {workflowTemplate.components.map((component) => (
                                 <span
                                   key={component.name}
                                   title={component.title || component.name}
@@ -122,7 +122,7 @@ export default function WorkflowTemplatesPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground italic">No workflows available in this project.</p>
+                  <p className="text-sm text-muted-foreground italic">No workflow templates available in this project.</p>
                 )}
               </section>
             ))}

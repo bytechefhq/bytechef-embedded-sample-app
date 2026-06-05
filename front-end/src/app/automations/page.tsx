@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { ChevronDownIcon, MessageCircleIcon, PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import CreateWorkflowDialog from "./components/create-workflow-dialog";
+import GenerateWorkflowDialog from "./components/generate-workflow-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ export default function AutomationsPage() {
   const [workflows, setWorkflows] = useState<Workflow[] | undefined>();
   const [isLoading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -79,6 +81,11 @@ export default function AutomationsPage() {
     fetchWorkflowsData(); // Refresh the list
   };
 
+  const handleWorkflowGenerated = () => {
+    setSuccess("Workflow generated successfully!");
+    fetchWorkflowsData();
+  };
+
   useEffect(() => {
     fetchWorkflowsData();
   }, []);
@@ -127,6 +134,16 @@ export default function AutomationsPage() {
 
                 <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
                   New from Scratch
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setIsGenerateDialogOpen(true)}>
+                  <SparklesIcon className="h-4 w-4 mr-2" />
+                  Generate from Prompt
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => router.push("/create-from-chat")}>
+                  <MessageCircleIcon className="h-4 w-4 mr-2" />
+                  Create from Chat
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -203,6 +220,12 @@ export default function AutomationsPage() {
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
           onWorkflowCreated={handleWorkflowCreated}
+        />
+
+        <GenerateWorkflowDialog
+          isOpen={isGenerateDialogOpen}
+          onClose={() => setIsGenerateDialogOpen(false)}
+          onWorkflowGenerated={handleWorkflowGenerated}
         />
       </div>
     </div>

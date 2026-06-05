@@ -165,6 +165,31 @@ export async function copyWorkflowTemplate(workflowUuid: string): Promise<string
 }
 
 /**
+ * Generate a new workflow from a natural language prompt using AI Copilot
+ * @param prompt Natural language description of the workflow to build
+ * @returns Promise that resolves to the uuid of the newly created workflow
+ */
+export async function generateWorkflow(prompt: string): Promise<string> {
+  const response = await fetchWithAuth('/api/embedded/v1/automation/workflows/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({prompt})
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate workflow: ${response.status}`);
+  }
+
+  const newWorkflowUuid = (await response.text()).trim();
+
+  return newWorkflowUuid.startsWith('"') && newWorkflowUuid.endsWith('"')
+    ? newWorkflowUuid.slice(1, -1)
+    : newWorkflowUuid;
+}
+
+/**
  * Get the current token, fetching it if necessary
  * @returns Promise that resolves to the token
  */

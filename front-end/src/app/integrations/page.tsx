@@ -23,6 +23,48 @@ function ConnectDialogOpener({integrationId, jwtToken, onDone}: {integrationId: 
     environment: BYTECHEF_ENVIRONMENT,
     integrationId,
     jwtToken,
+    // Field Mapping: configure how the end user maps your application's fields to the connected
+    // integration's fields. This only renders when a workflow input is of type FIELD_MAPPING and its
+    // objectName matches a key below (here, "Contacts").
+    mapObjectFields: {
+      Contacts: {
+        // List the connected integration's object types. `executeAction(component, version, action, input)`
+        // runs a component action against the connected account's live credentials — ByteChef's
+        // equivalent of paragon.request. Replace the component name/version/action with ones your
+        // integration actually exposes.
+        objectTypes: {
+          get: async ({executeAction, search}) => {
+            const objects = (await executeAction('salesforce', 1, 'listObjects', {search})) as Array<{
+              id: string;
+              name: string;
+            }>;
+
+            return objects.map((object) => ({label: object.name, value: object.id}));
+          },
+        },
+        // List the fields of the selected object type.
+        integrationFields: {
+          get: async ({executeAction, objectType}) => {
+            const fields = (await executeAction('salesforce', 1, 'listObjectFields', {objectType})) as Array<{
+              id: string;
+              label: string;
+            }>;
+
+            return fields.map((field) => ({label: field.label, value: field.id}));
+          },
+        },
+        // Your application's fields, shown on the left of the mapping UI.
+        applicationFields: {
+          fields: [
+            {label: 'Title', value: 'title'},
+            {label: 'Email', value: 'email'},
+          ],
+          defaultFields: [], // [] = start with no rows; omit to show all
+          userCanCreateFields: true, // let users add a custom field (freeform/flexible schema)
+          userCanRemoveMappings: true, // let users remove and re-add rows
+        },
+      },
+    },
   });
 
   useEffect(() => {

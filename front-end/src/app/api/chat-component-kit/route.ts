@@ -5,6 +5,7 @@ import {
   convertToModelMessages,
   tool as defineTool,
   jsonSchema,
+  type Tool,
   type UIMessage,
   type JSONSchema7,
 } from "ai";
@@ -25,7 +26,8 @@ interface ByteChefToolI {
 }
 
 async function getTools(): Promise<
-  Record<string, ReturnType<typeof defineTool>>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Record<string, Tool<any, any>>
 > {
   const jwtToken = await getToken();
 
@@ -57,8 +59,8 @@ async function getTools(): Promise<
         curTool.function.name,
         defineTool({
           description: curTool.function.description,
-          inputSchema: jsonSchema(parsedParams),
-          execute: async (params) => {
+          inputSchema: jsonSchema<Record<string, unknown>>(parsedParams as import("ai").JSONSchema7),
+          execute: async (params: Record<string, unknown>) => {
             const executeResponse = await fetch(
               `${BYTECHEF_APP_BASE_URL}/api/embedded/v1/${BYTECHEF_EXTERNAL_USER_ID}/tools`,
               {

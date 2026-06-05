@@ -10,7 +10,7 @@ export default async function AutomationPage({params}: {params: {workflowUuid: s
     baseUrl={`${process.env.BYTECHEF_APP_BASE_URL??'http://127.0.0.1:5173'}`}
     connectionDialogAllowed={true}
     environment={'DEVELOPMENT'}
-    includeComponents={['slack', 'productboard', 'googleMail']}
+    includeComponents={[]}
     jwtToken={jwtToken}
     sharedConnectionIds={[1072]}
     workflowUuid={workflowUuid} />;

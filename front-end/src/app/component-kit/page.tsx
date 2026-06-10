@@ -22,7 +22,7 @@ const input = {
   }
 }
 
-export default function ActionKitPage() {
+export default function ComponentKitPage() {
   const [componentName, setComponentName] = useState("openai");
   const [componentVersion, setComponentVersion] = useState(1);
   const [actionName, setActionName] = useState("ask");
@@ -41,7 +41,7 @@ export default function ActionKitPage() {
     try {
       const input = JSON.parse(inputJson);
 
-      const response = await fetch("/api/action-kit", {
+      const response = await fetch("/api/component-kit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -68,7 +68,7 @@ export default function ActionKitPage() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">ActionKit Playground</h1>
+      <h1 className="text-2xl font-bold">ComponentKit Playground</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>

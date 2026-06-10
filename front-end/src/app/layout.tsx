@@ -32,7 +32,7 @@ const navigation = [
   // { name: 'Calendar', href: '/calendar', icon: CalendarIcon },
   // { name: 'Documents', href: '/documents', icon: FilesIcon },
   // { name: 'Reports', href: '/reports', icon: ChartPieIcon },
-  { name: 'ActionKit Playground', href: '/action-kit', icon: FoldersIcon },
+  { name: 'ComponentKit Playground', href: '/component-kit', icon: FoldersIcon },
   { name: 'App Event Playground', href: '/app-event', icon: ZapIcon },
   { name: 'Request Playground', href: '/request', icon: WebhookIcon },
   { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },

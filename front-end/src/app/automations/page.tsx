@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon, MessageCircleIcon, PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+import { ChevronDownIcon, FilePlusIcon, LayoutTemplateIcon, MessageCircleIcon, PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import CreateWorkflowDialog from "./components/create-workflow-dialog";
 import GenerateWorkflowDialog from "./components/generate-workflow-dialog";
 import { Button } from "@/components/ui/button";
@@ -129,10 +129,12 @@ export default function AutomationsPage() {
 
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => router.push("/automations/templates")}>
+                  <LayoutTemplateIcon className="h-4 w-4 mr-2" />
                   New from Template
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
+                  <FilePlusIcon className="h-4 w-4 mr-2" />
                   New from Scratch
                 </DropdownMenuItem>
 

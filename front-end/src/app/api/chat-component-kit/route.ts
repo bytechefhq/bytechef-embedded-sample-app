@@ -3,6 +3,7 @@ import { frontendTools } from "@assistant-ui/react-ai-sdk";
 import {
   streamText,
   convertToModelMessages,
+  stepCountIs,
   tool as defineTool,
   jsonSchema,
   type Tool,
@@ -112,6 +113,8 @@ export async function POST(req: Request) {
       ...frontendTools(clientTools ?? {}),
     },
     toolChoice: "auto",
+    // Continue the agent loop past tool calls so the model can respond to tool results (default is a single step).
+    stopWhen: stepCountIs(8),
     ...(system === undefined ? {} : { system }),
   });
 

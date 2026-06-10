@@ -5,6 +5,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import {
   streamText,
   convertToModelMessages,
+  stepCountIs,
   type UIMessage,
   type JSONSchema7,
 } from "ai";
@@ -51,6 +52,8 @@ export async function POST(req: Request) {
       ...frontendTools(clientTools ?? {}),
     },
     toolChoice: "auto",
+    // Continue the agent loop past tool calls so the model can respond to tool results (default is a single step).
+    stopWhen: stepCountIs(8),
     ...(system === undefined ? {} : { system }),
     onFinish: async () => {
       await mcpClient.close();

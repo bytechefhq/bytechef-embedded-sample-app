@@ -3,6 +3,7 @@ import { frontendTools } from "@assistant-ui/react-ai-sdk";
 import {
   streamText,
   convertToModelMessages,
+  stepCountIs,
   tool as defineTool,
   jsonSchema,
   type UIMessage,
@@ -118,6 +119,10 @@ export async function POST(req: Request) {
       ...frontendTools(clientTools ?? {}),
     },
     toolChoice: "auto",
+    // Allow the agent loop to continue past a tool call so the model can describe what it built and call
+    // returnToAutomations. Without this, streamText stops after the createWorkflow tool call (default is a single
+    // step) and the chat never produces a closing message.
+    stopWhen: stepCountIs(8),
   });
 
   return result.toUIMessageStreamResponse();

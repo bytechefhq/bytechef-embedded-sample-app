@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon, FilePlusIcon, LayoutTemplateIcon, MessageCircleIcon, PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+import { ChevronDownIcon, FilePlusIcon, LayoutTemplateIcon, PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import CreateWorkflowDialog from "./components/create-workflow-dialog";
 import GenerateWorkflowDialog from "./components/generate-workflow-dialog";
 import { Button } from "@/components/ui/button";
@@ -141,11 +141,6 @@ export default function AutomationsPage() {
                 <DropdownMenuItem onClick={() => setIsGenerateDialogOpen(true)}>
                   <SparklesIcon className="h-4 w-4 mr-2" />
                   Generate from Prompt
-                </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={() => router.push("/create-from-chat")}>
-                  <MessageCircleIcon className="h-4 w-4 mr-2" />
-                  Create from Chat
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

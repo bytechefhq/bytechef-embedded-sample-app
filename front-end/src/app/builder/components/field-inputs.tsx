@@ -22,12 +22,13 @@ export default function FieldInputs({fields, values, onChange}: FieldInputsProps
     <div className="flex flex-col gap-3">
       {visibleFields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1">
-          <Label className="text-xs">
+          <Label className="text-xs" htmlFor={field.key}>
             {field.label}
             {field.required ? <span className="text-destructive"> *</span> : null}
           </Label>
 
           <Input
+            id={field.key}
             value={values[field.key] ?? ''}
             placeholder={field.placeholder}
             onChange={(event) => onChange(field.key, event.target.value)}

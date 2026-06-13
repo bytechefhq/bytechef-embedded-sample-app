@@ -11,11 +11,14 @@ interface ConnectionPickerProps {
 }
 
 export default function ConnectionPicker({componentName, connectionId, onChange}: ConnectionPickerProps) {
-  const [connections, setConnections] = useState<ComponentConnection[]>([]);
+  const [connections, setConnections] = useState<ComponentConnection[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
+
+    setConnections(null);
+    setError(null);
 
     fetchComponentConnections(componentName)
       .then((data) => {
@@ -45,7 +48,7 @@ export default function ConnectionPicker({componentName, connectionId, onChange}
       >
         <option value="">No connection</option>
 
-        {connections.map((connection) => (
+        {(connections ?? []).map((connection) => (
           <option key={connection.id} value={connection.id}>
             {connection.name}
           </option>
@@ -53,7 +56,7 @@ export default function ConnectionPicker({componentName, connectionId, onChange}
       </select>
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      {!error && connections.length === 0 ? (
+      {!error && connections !== null && connections.length === 0 ? (
         <p className="text-xs text-muted-foreground">No existing connections for this component.</p>
       ) : null}
     </div>

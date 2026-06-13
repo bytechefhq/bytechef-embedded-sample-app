@@ -43,7 +43,7 @@ export default function ActionStep({step, onChange, onRemove}: ActionStepProps) 
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Action</span>
 
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onRemove}>
+        <Button aria-label="Remove step" variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={onRemove}>
           <Trash2Icon className="h-4 w-4" />
         </Button>
       </div>

@@ -103,8 +103,10 @@ export const COMPONENTS: CatalogComponent[] = [
   }
 ];
 
+export type ConditionOperationValue = 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'EMPTY' | 'NOT_EMPTY';
+
 // String comparison operations supported by the condition/v1 task dispatcher.
-export const CONDITION_OPERATIONS: {value: string; label: string}[] = [
+export const CONDITION_OPERATIONS: {value: ConditionOperationValue; label: string}[] = [
   {value: 'EQUALS', label: 'equals'},
   {value: 'NOT_EQUALS', label: 'does not equal'},
   {value: 'CONTAINS', label: 'contains'},

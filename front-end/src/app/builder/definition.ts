@@ -1,5 +1,7 @@
 import {
   CONDITION_OPERATIONS,
+  CatalogOperation,
+  ConditionOperationValue,
   ComponentName,
   findComponent,
   findOperation
@@ -31,7 +33,7 @@ export interface ConditionStepState {
   kind: 'condition';
   id: string;
   value1: string;
-  operation: string;          // EQUALS, NOT_EQUALS, ...
+  operation: ConditionOperationValue; // EQUALS, NOT_EQUALS, ...
   value2: string;
   caseTrue: ActionStepState[];
   caseFalse: ActionStepState[];
@@ -82,9 +84,7 @@ class NameCounter {
 }
 
 // Serialize a single action's raw string parameters into typed definition parameters.
-function buildActionParameters(componentName: ComponentName, operation: string, values: FieldValues): Record<string, unknown> {
-  const component = findComponent(componentName);
-  const catalogOperation = findOperation(component, operation, 'actions');
+function buildActionParameters(catalogOperation: CatalogOperation | undefined, values: FieldValues): Record<string, unknown> {
   const parameters: Record<string, unknown> = {};
 
   if (!catalogOperation) {
@@ -93,7 +93,9 @@ function buildActionParameters(componentName: ComponentName, operation: string, 
 
   for (const field of catalogOperation.fields) {
     if (field.kind === 'hidden') {
-      parameters[field.key] = field.defaultValue ?? '';
+      if (field.defaultValue != null) {
+        parameters[field.key] = field.defaultValue;
+      }
 
       continue;
     }
@@ -125,7 +127,7 @@ function buildActionNode(step: ActionStepState, counter: NameCounter): Definitio
     name: counter.next(step.componentName),
     label: catalogOperation ? catalogOperation.label : step.operation,
     type: `${step.componentName}/v1/${step.operation}`,
-    parameters: buildActionParameters(step.componentName, step.operation, step.parameters)
+    parameters: buildActionParameters(catalogOperation, step.parameters)
   };
 }
 

@@ -58,6 +58,13 @@ export interface AutomationWorkflowProject {
   workflowTemplates: AutomationWorkflowProjectWorkflowTemplate[];
 }
 
+// A connection the user already created for a given component, returned by
+// GET /api/embedded/v1/components/{componentName}/connections
+export interface ComponentConnection {
+  id: number;
+  name: string;
+}
+
 /**
  * Fetch all workflows
  * @returns Promise that resolves to an array of workflows
@@ -187,6 +194,85 @@ export async function generateWorkflow(prompt: string): Promise<string> {
   return newWorkflowUuid.startsWith('"') && newWorkflowUuid.endsWith('"')
     ? newWorkflowUuid.slice(1, -1)
     : newWorkflowUuid;
+}
+
+/**
+ * Create a workflow from a raw ByteChef workflow-definition JSON string.
+ *
+ * This is the single call a custom builder needs to persist a workflow: the
+ * embedded endpoint derives the user from the bearer token and returns the new
+ * workflow's uuid. Backed by ConnectedUserProjectWorkflowApiController.createFrontendProjectWorkflow.
+ *
+ * @param definition A complete workflow-definition JSON string (see buildWorkflowDefinition)
+ * @returns the new workflowUuid
+ */
+export async function createBuilderWorkflow(definition: string): Promise<string> {
+  const response = await fetchWithAuth('/api/embedded/v1/automation/workflows', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({definition})
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create workflow: ${response.status}`);
+  }
+
+  const workflowUuid = (await response.text()).trim();
+
+  return workflowUuid.startsWith('"') && workflowUuid.endsWith('"')
+    ? workflowUuid.slice(1, -1)
+    : workflowUuid;
+}
+
+/**
+ * List the connections the current user already has for a given component
+ * (e.g. "googleMail", "slack").
+ *
+ * @param componentName the ByteChef component name
+ * @returns the user's existing connections for that component
+ */
+export async function fetchComponentConnections(componentName: string): Promise<ComponentConnection[]> {
+  const response = await fetchWithAuth(`/api/embedded/v1/components/${componentName}/connections`, {
+    method: 'GET'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch connections for ${componentName}: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Bind an existing connection to a specific node of a saved workflow.
+ *
+ * The workflowConnectionKey is the connection key within the node; for the
+ * single-connection components used here it equals the component name.
+ * Backed by ConnectedUserProjectWorkflowApiController.updateFrontendWorkflowConfigurationConnection (HTTP PUT).
+ *
+ * @param workflowUuid uuid returned by createBuilderWorkflow
+ * @param workflowNodeName the node's name in the definition (e.g. "trigger_1", "slack_1")
+ * @param workflowConnectionKey the connection key (component name here)
+ * @param connectionId the connection to bind
+ */
+export async function bindWorkflowNodeConnection(
+  workflowUuid: string,
+  workflowNodeName: string,
+  workflowConnectionKey: string,
+  connectionId: number
+): Promise<Response> {
+  return fetchWithAuth(
+    `/api/embedded/v1/automation/workflows/${workflowUuid}/workflow-nodes/${workflowNodeName}/connection/${workflowConnectionKey}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({connectionId})
+    }
+  );
 }
 
 /**

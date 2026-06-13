@@ -15,6 +15,7 @@ import {
   MessageCircleIcon,
   SquareIcon,
   UsersIcon,
+  Wand2Icon,
   WebhookIcon,
   WorkflowIcon,
   ZapIcon
@@ -38,6 +39,7 @@ const navigation = [
   { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },
   { name: 'ComponentKit Chat', href: '/chat-component-kit', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },
+  { name: 'Workflow Builder', href: '/builder', icon: Wand2Icon },
   { name: 'Integrations', href: '/integrations', icon: SquareIcon },
 ]
 

@@ -83,7 +83,7 @@ export default function ActionStep({step, onChange, onRemove}: ActionStepProps) 
           </div>
         </div>
 
-        <FieldInputs fields={operation ? operation.fields : []} values={step.parameters} onChange={handleFieldChange} />
+        <FieldInputs fields={operation ? operation.fields : []} idPrefix={step.id} values={step.parameters} onChange={handleFieldChange} />
 
         <ConnectionPicker
           componentName={step.componentName}

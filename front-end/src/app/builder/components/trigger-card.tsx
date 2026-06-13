@@ -67,6 +67,7 @@ export default function TriggerCard({trigger, onChange}: TriggerCardProps) {
       <div className="mt-3 flex flex-col gap-3">
         <FieldInputs
           fields={operation ? operation.fields : []}
+          idPrefix="trigger"
           values={trigger.parameters}
           onChange={(key, value) => onChange({...trigger, parameters: {...trigger.parameters, [key]: value}})}
         />

@@ -7,11 +7,12 @@ import {Label} from '@/components/ui/label';
 
 interface FieldInputsProps {
   fields: CatalogField[];
+  idPrefix: string;
   values: FieldValues;
   onChange: (key: string, value: string) => void;
 }
 
-export default function FieldInputs({fields, values, onChange}: FieldInputsProps) {
+export default function FieldInputs({fields, idPrefix, values, onChange}: FieldInputsProps) {
   const visibleFields = fields.filter((field) => field.kind !== 'hidden');
 
   if (visibleFields.length === 0) {
@@ -22,13 +23,13 @@ export default function FieldInputs({fields, values, onChange}: FieldInputsProps
     <div className="flex flex-col gap-3">
       {visibleFields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1">
-          <Label className="text-xs" htmlFor={field.key}>
+          <Label className="text-xs" htmlFor={`${idPrefix}-${field.key}`}>
             {field.label}
             {field.required ? <span className="text-destructive"> *</span> : null}
           </Label>
 
           <Input
-            id={field.key}
+            id={`${idPrefix}-${field.key}`}
             value={values[field.key] ?? ''}
             placeholder={field.placeholder}
             onChange={(event) => onChange(field.key, event.target.value)}

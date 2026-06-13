@@ -102,6 +102,9 @@ function buildActionParameters(catalogOperation: CatalogOperation | undefined, v
 
     const raw = values[field.key] ?? '';
 
+    // NOTE: this demo does not enforce `required` client-side — blank values are
+    // simply omitted here and the server validates on save. A production builder
+    // would block Save until required fields are filled.
     if (raw.trim() === '') {
       continue;
     }

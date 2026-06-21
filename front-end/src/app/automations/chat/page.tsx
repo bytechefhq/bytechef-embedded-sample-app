@@ -1,10 +1,10 @@
 'use client';
 
-import { EmbeddedWorkflowChat } from "@bytechef/embedded-react";
 import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getToken } from "@/lib/api";
+import EmbeddedWorkflowChat from "@/components/embedded-workflow-chat";
 
 import { Button } from "@/components/ui/button";
 

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@bytechef/embedded-react'],
+  transpilePackages: ['@bytechef/embedded'],
   turbopack: {},
 };
 

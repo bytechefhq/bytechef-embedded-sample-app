@@ -2,7 +2,7 @@
 
 import {useCallback, useEffect, useState} from "react";
 import ReactSVG from "react-inlinesvg";
-import {useConnectDialog} from "@bytechef/embedded-react";
+import {useConnectDialog} from "@bytechef/embedded";
 import {getToken} from "@/lib/api";
 
 const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:5173';

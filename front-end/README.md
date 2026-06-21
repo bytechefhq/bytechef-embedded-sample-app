@@ -64,13 +64,13 @@ The frontend application will start on http://localhost:3000.
 
 ## Developing with the Embedded React SDK
 
-The sample app depends on `@bytechef/embedded-react` via a local `file:` reference. When you modify the SDK source code, changes do **not** propagate automatically — you must rebuild the SDK and reinstall it in the sample app.
+The sample app depends on `@bytechef/embedded` via a local `file:` reference. When you modify the SDK source code, changes do **not** propagate automatically — you must rebuild the SDK and reinstall it in the sample app.
 
 ### After making changes to the SDK
 
 ```bash
 # 1. Build the SDK
-cd <repo-root>/sdks/frontend/embedded/library/react
+cd <repo-root>/sdks/frontend/embedded/library
 npm run build
 
 # 2. Reinstall the SDK in the sample app (copies the new build)
@@ -90,7 +90,7 @@ For iterative SDK development, run the SDK build in watch mode in a separate ter
 
 ```bash
 # Terminal 1 — SDK auto-rebuild on changes
-cd <repo-root>/sdks/frontend/embedded/library/react
+cd <repo-root>/sdks/frontend/embedded/library
 npm run watch
 
 # Terminal 2 — After each rebuild, reinstall in the sample app
@@ -104,5 +104,5 @@ Note: even with watch mode, you still need to re-run `npm install --install-link
 
 - If you encounter CORS issues, ensure that the backend is running and properly configured to allow requests from the frontend origin
 - If authentication fails, check that your JWT token is being generated correctly with the proper private key and KID
-- If you get `Module not found: Can't resolve '@bytechef/embedded-react'`, run `npm install --install-links` in the front-end directory — do not use plain `npm install` as it creates symlinks that Turbopack cannot resolve
+- If you get `Module not found: Can't resolve '@bytechef/embedded'`, run `npm install --install-links` in the front-end directory — do not use plain `npm install` as it creates symlinks that Turbopack cannot resolve
 - For any other issues, check the console logs in both the backend and frontend applications

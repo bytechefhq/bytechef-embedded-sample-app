@@ -35,6 +35,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# yalc (local SDK development for @bytechef/embedded-react)
+# yalc (local SDK development for @bytechef/embedded)
 .yalc
 yalc.lock

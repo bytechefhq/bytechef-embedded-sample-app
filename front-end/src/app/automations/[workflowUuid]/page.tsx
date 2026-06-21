@@ -1,4 +1,4 @@
-import { EmbeddedWorkflowBuilder } from "@bytechef/embedded-react";
+import { EmbeddedWorkflowBuilder } from "@bytechef/embedded";
 import {getToken} from "@/lib/api";
 
 export default async function AutomationPage({params}: {params: {workflowUuid: string}}) {

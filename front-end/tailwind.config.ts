@@ -69,6 +69,8 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  // Animations are provided by tw-animate-css (imported in globals.css), the v4-compatible
+  // replacement for the v3-only tailwindcss-animate plugin.
+  plugins: [],
 };
 export default config;

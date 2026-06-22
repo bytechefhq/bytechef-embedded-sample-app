@@ -145,7 +145,7 @@ export default function AutomationsPage() {
 
                 <DropdownMenuItem onClick={() => router.push("/automations/chat")}>
                   <MessageSquareIcon className="h-4 w-4 mr-2" />
-                  Generate from Chat
+                  New from Chat
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => router.push("/builder")}>

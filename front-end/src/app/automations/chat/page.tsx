@@ -45,7 +45,7 @@ export default function GenerateFromChatPage() {
             environment="DEVELOPMENT"
             jwtToken={jwtToken}
             onWorkflowReady={setWorkflowUuid}
-            title="Generate from Chat"
+            title="New from Chat"
           />
         ) : (
           <div className="p-6 text-sm text-muted-foreground">Loading…</div>

@@ -13,6 +13,7 @@ interface EmbeddedCopilotRuntimeProviderPropsI {
     environment: string;
     jwtToken: string;
     onRunFinished?: () => void;
+    systemPrompt?: string;
     workflowUuid: string;
 }
 
@@ -65,6 +66,7 @@ export function EmbeddedCopilotRuntimeProvider({
     environment,
     jwtToken,
     onRunFinished,
+    systemPrompt,
     workflowUuid,
 }: Readonly<EmbeddedCopilotRuntimeProviderPropsI>) {
     const [isRunning, setIsRunning] = useState(false);
@@ -101,7 +103,13 @@ export function EmbeddedCopilotRuntimeProvider({
     const runAgentNow = async () => {
         setIsRunning(true);
 
-        agent.setState({mode: 'BUILD', workflowUuid});
+        const trimmedSystemPrompt = systemPrompt?.trim();
+
+        agent.setState(
+            trimmedSystemPrompt
+                ? {additionalSystemPrompt: trimmedSystemPrompt, mode: 'BUILD', workflowUuid}
+                : {mode: 'BUILD', workflowUuid}
+        );
 
         const subscriber: AgentSubscriber = {
             onRunErrorEvent: ({event}) => {

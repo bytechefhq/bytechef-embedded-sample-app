@@ -18,6 +18,7 @@ export interface EmbeddedWorkflowChatPropsI {
     jwtToken: string;
     onWorkflowReady?: (workflowUuid: string) => void;
     suggestions?: string[];
+    systemPrompt?: string;
     title?: string;
 }
 
@@ -29,6 +30,7 @@ const EmbeddedWorkflowChat = ({
     jwtToken,
     onWorkflowReady,
     suggestions,
+    systemPrompt,
     title = 'AI Assistant',
 }: EmbeddedWorkflowChatPropsI) => {
     const [chatStore] = useState(createChatStore);
@@ -107,6 +109,7 @@ const EmbeddedWorkflowChat = ({
                                 onWorkflowReady?.(workflowUuid);
                             }
                         }}
+                        systemPrompt={systemPrompt}
                         workflowUuid={workflowUuid}
                     >
                         <WorkflowChatThread dataComponents={embeddedChatDataComponents} suggestions={suggestions} />

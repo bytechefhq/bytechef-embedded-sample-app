@@ -7,11 +7,13 @@ import { getToken } from "@/lib/api";
 import EmbeddedWorkflowChat from "@/components/embedded-workflow-chat";
 
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 const DEFAULT_BYTECHEF_APP_BASE_URL = "http://localhost:5173";
 
 export default function GenerateFromChatPage() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);
+  const [systemPrompt, setSystemPrompt] = useState("");
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
 
   const router = useRouter();
@@ -24,14 +26,26 @@ export default function GenerateFromChatPage() {
 
   return (
     <div className="flex h-screen w-full flex-col p-4">
-      {workflowUuid && (
-        <div className="mb-3 flex items-center justify-end">
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <details className="text-sm">
+          <summary className="cursor-pointer text-muted-foreground">System prompt (optional)</summary>
+
+          <Textarea
+            className="mt-2 w-96"
+            onChange={(event) => setSystemPrompt(event.target.value)}
+            placeholder="e.g. Always prefer Slack over email; keep workflows under five steps."
+            rows={3}
+            value={systemPrompt}
+          />
+        </details>
+
+        {workflowUuid && (
           <Button onClick={() => router.push(`/automations/${workflowUuid}`)}>
             <ExternalLinkIcon className="h-4 w-4 mr-2" />
             Open workflow
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="min-h-0 flex-1">
         {jwtToken ? (
@@ -41,6 +55,7 @@ export default function GenerateFromChatPage() {
             environment="DEVELOPMENT"
             jwtToken={jwtToken}
             onWorkflowReady={setWorkflowUuid}
+            systemPrompt={systemPrompt}
             title="New from Chat"
           />
         ) : (

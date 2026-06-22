@@ -51,12 +51,32 @@ export default function GenerateFromChatPage() {
         {jwtToken ? (
           <EmbeddedWorkflowChat
             baseUrl={process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL ?? DEFAULT_BYTECHEF_APP_BASE_URL}
-            description="Describe the workflow you want and refine it by chatting."
             environment="DEVELOPMENT"
             jwtToken={jwtToken}
             onWorkflowReady={setWorkflowUuid}
+            suggestions={[
+              {
+                action: "Describe what this workflow does end-to-end",
+                label: "does end-to-end.",
+                title: "Describe what this workflow",
+              },
+              {
+                action: "Which properties of this node are required?",
+                label: "of this node are required?",
+                title: "Which properties",
+              },
+              {
+                action: "Search for an action that can send an email",
+                label: "that can send an email",
+                title: "Search for an action",
+              },
+              {
+                action: "How do I implement conditional branching in workflows?",
+                label: "conditional branching in workflows?",
+                title: "How do I implement",
+              },
+            ]}
             systemPrompt={systemPrompt}
-            title="New from Chat"
           />
         ) : (
           <div className="p-6 text-sm text-muted-foreground">Loading…</div>

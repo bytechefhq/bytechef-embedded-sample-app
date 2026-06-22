@@ -42,9 +42,15 @@ import {Button, TooltipIconButton} from './assistant-ui/tooltip-icon-button';
  */
 const ThreadDataComponentsContext = createContext<Record<string, DataMessagePartComponent> | undefined>(undefined);
 
+export interface WorkflowChatSuggestionI {
+    action: string;
+    label: string;
+    title: string;
+}
+
 interface ThreadPropsI {
     dataComponents?: Record<string, DataMessagePartComponent>;
-    suggestions?: string[];
+    suggestions?: WorkflowChatSuggestionI[];
 }
 
 export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents, suggestions}) => {
@@ -116,7 +122,7 @@ const ThreadScrollToBottom: FC = () => {
 };
 
 interface ThreadWelcomePropsI {
-    suggestions?: string[];
+    suggestions?: WorkflowChatSuggestionI[];
 }
 
 const ThreadWelcome: FC<ThreadWelcomePropsI> = ({suggestions}) => {
@@ -140,7 +146,7 @@ const ThreadWelcome: FC<ThreadWelcomePropsI> = ({suggestions}) => {
 };
 
 interface ThreadSuggestionsPropsI {
-    suggestions: string[];
+    suggestions: WorkflowChatSuggestionI[];
 }
 
 const ThreadSuggestions: FC<ThreadSuggestionsPropsI> = ({suggestions}) => {
@@ -148,16 +154,20 @@ const ThreadSuggestions: FC<ThreadSuggestionsPropsI> = ({suggestions}) => {
         <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
             {suggestions.map((suggestion) => (
                 <div
-                    key={suggestion}
-                    className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200"
+                    key={suggestion.action}
+                    className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200 [&:nth-child(n+3)]:hidden @md:[&:nth-child(n+3)]:block"
                 >
-                    <ThreadPrimitive.Suggestion prompt={suggestion} send asChild>
+                    <ThreadPrimitive.Suggestion prompt={suggestion.action} send asChild>
                         <Button
                             variant="ghost"
-                            aria-label={suggestion}
-                            className="aui-thread-welcome-suggestion bg-background hover:bg-muted h-auto w-full items-start justify-start rounded-3xl border px-4 py-3 text-start text-sm transition-colors"
+                            aria-label={suggestion.action}
+                            className="aui-thread-welcome-suggestion bg-background hover:bg-muted h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-3xl border px-5 py-4 text-start text-sm transition-colors @md:flex-col"
                         >
-                            {suggestion}
+                            <span className="aui-thread-welcome-suggestion-text-1 font-medium">{suggestion.title}</span>
+
+                            <span className="aui-thread-welcome-suggestion-text-2 text-muted-foreground">
+                                {suggestion.label}
+                            </span>
                         </Button>
                     </ThreadPrimitive.Suggestion>
                 </div>

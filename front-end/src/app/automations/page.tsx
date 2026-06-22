@@ -135,7 +135,7 @@ export default function AutomationsPage() {
 
                 <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
                   <FilePlusIcon className="h-4 w-4 mr-2" />
-                  New from Scratch
+                  New from Embedded Workflow Builder
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => setIsGenerateDialogOpen(true)}>

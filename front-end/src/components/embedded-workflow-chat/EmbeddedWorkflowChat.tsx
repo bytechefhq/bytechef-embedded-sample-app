@@ -1,4 +1,3 @@
-import {BotMessageSquareIcon, MessageSquareXIcon} from 'lucide-react';
 import {useEffect, useRef, useState} from 'react';
 import {twMerge} from 'tailwind-merge';
 
@@ -8,43 +7,45 @@ import {embeddedChatDataComponents} from './dataComponents';
 import EmbeddedChatBoundary from './EmbeddedChatBoundary';
 import {EmbeddedCopilotRuntimeProvider} from './EmbeddedCopilotRuntimeProvider';
 import {createChatStore} from './store';
-import {WorkflowChatThread} from './workflow-chat-thread';
+import {WorkflowChatThread, type WorkflowChatSuggestionI} from './workflow-chat-thread';
+
+export type {WorkflowChatSuggestionI};
 
 export interface EmbeddedWorkflowChatPropsI {
     baseUrl?: string;
     className?: string;
-    description?: string;
     environment?: 'DEVELOPMENT' | 'PRODUCTION' | 'STAGING';
     jwtToken: string;
     onWorkflowReady?: (workflowUuid: string) => void;
-    suggestions?: string[];
+    suggestions?: WorkflowChatSuggestionI[];
     systemPrompt?: string;
-    title?: string;
 }
 
 const EmbeddedWorkflowChat = ({
     baseUrl = DEFAULT_BASE_URL,
     className,
-    description,
     environment = 'PRODUCTION',
     jwtToken,
     onWorkflowReady,
     suggestions,
     systemPrompt,
-    title = 'AI Assistant',
 }: EmbeddedWorkflowChatPropsI) => {
     const [chatStore] = useState(createChatStore);
     const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const readyFiredRef = useRef(false);
-
-    const handleNewConversation = () => {
-        chatStore.getState().resetMessages();
-        chatStore.getState().generateConversationId();
-    };
+    const skeletonCreatedRef = useRef(false);
 
     useEffect(() => {
+        // Guard against React StrictMode's double-invoke (default-on in Next.js dev):
+        // without this latch the effect fires twice and creates two skeleton workflows.
+        if (skeletonCreatedRef.current) {
+            return;
+        }
+
+        skeletonCreatedRef.current = true;
+
         let cancelled = false;
 
         createSkeletonWorkflow({baseUrl, environment, jwtToken})
@@ -74,27 +75,6 @@ const EmbeddedWorkflowChat = ({
 
     return (
         <div className={twMerge('flex h-full flex-col', className)}>
-            <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                        <BotMessageSquareIcon className="size-5" />
-
-                        <h4 className="text-sm font-semibold">{title}</h4>
-                    </div>
-
-                    {description && <p className="text-muted-foreground mt-0.5 text-xs">{description}</p>}
-                </div>
-
-                <button
-                    aria-label="New conversation"
-                    className="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-                    onClick={handleNewConversation}
-                    type="button"
-                >
-                    <MessageSquareXIcon className="size-4" />
-                </button>
-            </div>
-
             <div className="min-h-0 flex-1">
                 <EmbeddedChatBoundary>
                     <EmbeddedCopilotRuntimeProvider

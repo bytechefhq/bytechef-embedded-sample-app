@@ -23,7 +23,7 @@ export default function GenerateFromChatPage() {
   }, []);
 
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col p-4">
+    <div className="flex h-screen w-full flex-col p-4">
       <div className="mb-3 flex items-center justify-between">
         <Button variant="ghost" size="icon" onClick={() => router.push("/automations")}>
           <ArrowLeftIcon className="h-4 w-4" />
@@ -37,7 +37,7 @@ export default function GenerateFromChatPage() {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 rounded-md border border-border">
+      <div className="min-h-0 flex-1">
         {jwtToken ? (
           <EmbeddedWorkflowChat
             baseUrl={process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL ?? DEFAULT_BYTECHEF_APP_BASE_URL}

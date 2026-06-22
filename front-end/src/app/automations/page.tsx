@@ -150,7 +150,7 @@ export default function AutomationsPage() {
 
                 <DropdownMenuItem onClick={() => router.push("/builder")}>
                   <Wand2Icon className="h-4 w-4 mr-2" />
-                  Custom Workflow Builder
+                  New from Custom Workflow Builder
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -140,7 +140,7 @@ export default function AutomationsPage() {
 
                 <DropdownMenuItem onClick={() => setIsGenerateDialogOpen(true)}>
                   <SparklesIcon className="h-4 w-4 mr-2" />
-                  Generate from Prompt
+                  New from Prompt
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => router.push("/automations/chat")}>

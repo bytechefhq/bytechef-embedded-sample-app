@@ -26,6 +26,7 @@ import {Textarea} from "@/components/ui/textarea";
 
 const formSchema = z.object({
   prompt: z.string().min(10, "Please describe the workflow in a sentence or two."),
+  systemPrompt: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,6 +48,7 @@ export default function GenerateWorkflowDialog({
   const form = useForm<FormValues>({
     defaultValues: {
       prompt: "",
+      systemPrompt: "",
     },
     resolver: zodResolver(formSchema),
   });
@@ -56,7 +58,7 @@ export default function GenerateWorkflowDialog({
     setIsSubmitting(true);
 
     try {
-      const workflowUuid = await generateWorkflow(values.prompt);
+      const workflowUuid = await generateWorkflow(values.prompt, values.systemPrompt);
 
       form.reset();
       onClose();
@@ -100,6 +102,26 @@ export default function GenerateWorkflowDialog({
                     <Textarea
                       placeholder="e.g. When a new Productboard note is created, post a summary to a Slack channel."
                       rows={5}
+                      {...field}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="systemPrompt"
+              render={({field}) => (
+                <FormItem>
+                  <FormLabel>System prompt (optional)</FormLabel>
+
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g. Always prefer Slack over email; keep workflows under five steps."
+                      rows={3}
                       {...field}
                     />
                   </FormControl>

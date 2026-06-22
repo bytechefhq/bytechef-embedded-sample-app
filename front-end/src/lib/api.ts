@@ -174,15 +174,20 @@ export async function copyWorkflowTemplate(workflowUuid: string): Promise<string
 /**
  * Generate a new workflow from a natural language prompt using AI Copilot
  * @param prompt Natural language description of the workflow to build
+ * @param systemPrompt Optional additional instructions merged into the builder agent's system prompt
  * @returns Promise that resolves to the uuid of the newly created workflow
  */
-export async function generateWorkflow(prompt: string): Promise<string> {
+export async function generateWorkflow(prompt: string, systemPrompt?: string): Promise<string> {
+  const trimmedSystemPrompt = systemPrompt?.trim();
+
   const response = await fetchWithAuth('/api/embedded/v1/automation/workflows/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({prompt})
+    body: JSON.stringify(
+      trimmedSystemPrompt ? {prompt, systemPrompt: trimmedSystemPrompt} : {prompt}
+    )
   });
 
   if (!response.ok) {

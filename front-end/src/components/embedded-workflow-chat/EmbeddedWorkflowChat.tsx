@@ -72,7 +72,7 @@ const EmbeddedWorkflowChat = ({
 
     return (
         <div className={twMerge('flex h-full flex-col', className)}>
-            <div className="flex items-center justify-between border-b px-4 py-3">
+            <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                         <BotMessageSquareIcon className="size-5" />

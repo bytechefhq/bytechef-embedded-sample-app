@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
+import { ExternalLinkIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getToken } from "@/lib/api";
@@ -24,18 +24,14 @@ export default function GenerateFromChatPage() {
 
   return (
     <div className="flex h-screen w-full flex-col p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/automations")}>
-          <ArrowLeftIcon className="h-4 w-4" />
-        </Button>
-
-        {workflowUuid && (
+      {workflowUuid && (
+        <div className="mb-3 flex items-center justify-end">
           <Button onClick={() => router.push(`/automations/${workflowUuid}`)}>
             <ExternalLinkIcon className="h-4 w-4 mr-2" />
             Open workflow
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="min-h-0 flex-1">
         {jwtToken ? (

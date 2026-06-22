@@ -103,6 +103,9 @@ export function EmbeddedCopilotRuntimeProvider({
     const runAgentNow = async () => {
         setIsRunning(true);
 
+        // systemPrompt is intentionally read live from the prop on each turn so edits between turns take effect.
+        // Do NOT hoist runAgentNow into a useCallback without adding systemPrompt to its dependency array — the
+        // linter won't catch the missing prop dep and a stale-closure bug would silently return.
         const trimmedSystemPrompt = systemPrompt?.trim();
 
         agent.setState(

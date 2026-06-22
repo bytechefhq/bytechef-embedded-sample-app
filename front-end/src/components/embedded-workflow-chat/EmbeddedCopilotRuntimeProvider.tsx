@@ -84,6 +84,10 @@ export function EmbeddedCopilotRuntimeProvider({
         () =>
             new HttpAgent({
                 agentId: 'workflow_editor',
+                // @ag-ui/client stores this fetch and later calls it as `this.fetch(...)`. Passing the bare global
+                // would invoke native fetch with `this` === the agent instance, which the branded fetch rejects with
+                // "Failed to execute 'fetch' on 'Window': Illegal invocation". Wrap it so the receiver stays window.
+                fetch: (url: string, requestInit: RequestInit) => fetch(url, requestInit),
                 headers: {
                     Authorization: `Bearer ${jwtToken}`,
                     'X-Environment': environment,

@@ -1,5 +1,13 @@
 import {AgentSubscriber, HttpAgent, randomUUID} from '@ag-ui/client';
-import {AppendMessage, AssistantRuntimeProvider, ThreadMessageLike, useExternalStoreRuntime} from '@assistant-ui/react';
+import {
+    AppendMessage,
+    AssistantRuntimeProvider,
+    type SuggestionConfig,
+    Suggestions,
+    ThreadMessageLike,
+    useAui,
+    useExternalStoreRuntime,
+} from '@assistant-ui/react';
 import {ReactNode, useMemo, useState} from 'react';
 import {useShallow} from 'zustand/react/shallow';
 
@@ -13,6 +21,7 @@ interface EmbeddedCopilotRuntimeProviderPropsI {
     environment: string;
     jwtToken: string;
     onRunFinished?: () => void;
+    suggestions?: SuggestionConfig[];
     systemPrompt?: string;
     workflowUuid: string;
 }
@@ -66,6 +75,7 @@ export function EmbeddedCopilotRuntimeProvider({
     environment,
     jwtToken,
     onRunFinished,
+    suggestions,
     systemPrompt,
     workflowUuid,
 }: Readonly<EmbeddedCopilotRuntimeProviderPropsI>) {
@@ -242,5 +252,13 @@ export function EmbeddedCopilotRuntimeProvider({
         onReload,
     });
 
-    return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>;
+    // Welcome-screen suggestions registered via the new assistant-ui suggestions API. ThreadPrimitive.Suggestions
+    // (in workflow-chat-thread) reads them from `s.suggestions.suggestions`.
+    const aui = useAui({suggestions: Suggestions(suggestions ?? [])}, {parent: null});
+
+    return (
+        <AssistantRuntimeProvider aui={aui} runtime={runtime}>
+            {children}
+        </AssistantRuntimeProvider>
+    );
 }

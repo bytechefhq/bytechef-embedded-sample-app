@@ -11,6 +11,7 @@ import {
     ErrorPrimitive,
     groupPartByType,
     MessagePrimitive,
+    SuggestionPrimitive,
     ThreadPrimitive,
     useAuiState,
 } from '@assistant-ui/react';
@@ -50,10 +51,9 @@ export interface WorkflowChatSuggestionI {
 
 interface ThreadPropsI {
     dataComponents?: Record<string, DataMessagePartComponent>;
-    suggestions?: WorkflowChatSuggestionI[];
 }
 
-export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents, suggestions}) => {
+export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents}) => {
     return (
         <ThreadDataComponentsContext.Provider value={dataComponents}>
             <ThreadPrimitive.Root
@@ -71,7 +71,7 @@ export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents, suggestion
                 >
                     <div className="mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4">
                         <AuiIf condition={(state) => state.thread.isEmpty}>
-                            <ThreadWelcome suggestions={suggestions} />
+                            <ThreadWelcome />
                         </AuiIf>
 
                         <div
@@ -121,11 +121,7 @@ const ThreadScrollToBottom: FC = () => {
     );
 };
 
-interface ThreadWelcomePropsI {
-    suggestions?: WorkflowChatSuggestionI[];
-}
-
-const ThreadWelcome: FC<ThreadWelcomePropsI> = ({suggestions}) => {
+const ThreadWelcome: FC = () => {
     return (
         <div className="aui-thread-welcome-root my-auto flex grow flex-col">
             <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
@@ -140,38 +136,34 @@ const ThreadWelcome: FC<ThreadWelcomePropsI> = ({suggestions}) => {
                 </div>
             </div>
 
-            {suggestions && suggestions.length > 0 && <ThreadSuggestions suggestions={suggestions} />}
+            <ThreadSuggestions />
         </div>
     );
 };
 
-interface ThreadSuggestionsPropsI {
-    suggestions: WorkflowChatSuggestionI[];
-}
-
-const ThreadSuggestions: FC<ThreadSuggestionsPropsI> = ({suggestions}) => {
+// Suggestions are configured at the runtime level (the new assistant-ui suggestions API) via
+// EmbeddedCopilotRuntimeProvider; ThreadPrimitive.Suggestions reads them from `s.suggestions.suggestions`.
+const ThreadSuggestions: FC = () => {
     return (
         <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
-            {suggestions.map((suggestion) => (
-                <div
-                    key={suggestion.action}
-                    className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200 [&:nth-child(n+3)]:hidden @md:[&:nth-child(n+3)]:block"
-                >
-                    <ThreadPrimitive.Suggestion prompt={suggestion.action} send asChild>
-                        <Button
-                            variant="ghost"
-                            aria-label={suggestion.action}
-                            className="aui-thread-welcome-suggestion bg-background hover:bg-muted h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-3xl border px-5 py-4 text-start text-sm transition-colors @md:flex-col"
-                        >
-                            <span className="aui-thread-welcome-suggestion-text-1 font-medium">{suggestion.title}</span>
+            <ThreadPrimitive.Suggestions>{() => <ThreadSuggestionItem />}</ThreadPrimitive.Suggestions>
+        </div>
+    );
+};
 
-                            <span className="aui-thread-welcome-suggestion-text-2 text-muted-foreground">
-                                {suggestion.label}
-                            </span>
-                        </Button>
-                    </ThreadPrimitive.Suggestion>
-                </div>
-            ))}
+const ThreadSuggestionItem: FC = () => {
+    return (
+        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200 [&:nth-child(n+3)]:hidden @md:[&:nth-child(n+3)]:block">
+            <SuggestionPrimitive.Trigger send asChild>
+                <Button
+                    variant="ghost"
+                    className="aui-thread-welcome-suggestion bg-background hover:bg-muted h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-3xl border border-border px-5 py-4 text-start text-sm transition-colors @md:flex-col"
+                >
+                    <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
+
+                    <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden" />
+                </Button>
+            </SuggestionPrimitive.Trigger>
         </div>
     );
 };

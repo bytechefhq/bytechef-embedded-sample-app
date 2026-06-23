@@ -89,10 +89,15 @@ const EmbeddedWorkflowChat = ({
                                 onWorkflowReady?.(workflowUuid);
                             }
                         }}
+                        suggestions={suggestions?.map((suggestion) => ({
+                            label: suggestion.label,
+                            prompt: suggestion.action,
+                            title: suggestion.title,
+                        }))}
                         systemPrompt={systemPrompt}
                         workflowUuid={workflowUuid}
                     >
-                        <WorkflowChatThread dataComponents={embeddedChatDataComponents} suggestions={suggestions} />
+                        <WorkflowChatThread dataComponents={embeddedChatDataComponents} />
                     </EmbeddedCopilotRuntimeProvider>
                 </EmbeddedChatBoundary>
             </div>

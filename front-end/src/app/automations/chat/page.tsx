@@ -27,11 +27,11 @@ export default function GenerateFromChatPage() {
   return (
     <div className="flex h-screen w-full flex-col p-4">
       <div className="mb-3 flex items-center justify-between gap-4">
-        <details className="text-sm">
+        <details className="flex-1 text-sm">
           <summary className="cursor-pointer text-muted-foreground">System prompt (optional)</summary>
 
           <Textarea
-            className="mt-2 w-96"
+            className="mt-2 w-full max-w-3xl"
             onChange={(event) => setSystemPrompt(event.target.value)}
             placeholder="e.g. Always prefer Slack over email; keep workflows under five steps."
             rows={3}

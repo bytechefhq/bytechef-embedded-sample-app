@@ -38,31 +38,22 @@ const EmbeddedWorkflowChat = ({
     const skeletonCreatedRef = useRef(false);
 
     useEffect(() => {
-        // Guard against React StrictMode's double-invoke (default-on in Next.js dev):
-        // without this latch the effect fires twice and creates two skeleton workflows.
+        // Create the skeleton workflow exactly once. The ref latch guards against React StrictMode's
+        // double-invoke (default-on in Next.js dev), which would otherwise create two workflows.
+        // Note: we deliberately do NOT use a `cancelled` cleanup flag here — combined with the latch it
+        // would veto the only request's result (StrictMode's cleanup runs between the two invocations),
+        // leaving the chat stuck on "Starting…". setState after unmount is a no-op in React 19.
         if (skeletonCreatedRef.current) {
             return;
         }
 
         skeletonCreatedRef.current = true;
 
-        let cancelled = false;
-
         createSkeletonWorkflow({baseUrl, environment, jwtToken})
-            .then((uuid) => {
-                if (!cancelled) {
-                    setWorkflowUuid(uuid);
-                }
-            })
-            .catch((createError) => {
-                if (!cancelled) {
-                    setError(createError instanceof Error ? createError.message : 'Failed to start chat');
-                }
-            });
-
-        return () => {
-            cancelled = true;
-        };
+            .then((uuid) => setWorkflowUuid(uuid))
+            .catch((createError) =>
+                setError(createError instanceof Error ? createError.message : 'Failed to start chat')
+            );
     }, [baseUrl, environment, jwtToken]);
 
     if (error) {

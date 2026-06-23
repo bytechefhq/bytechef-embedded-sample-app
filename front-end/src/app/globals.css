@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "tw-shimmer";
 
 /* Load the legacy JS theme (color tokens mapped as hsl(var(--x)), borderRadius, keyframes) in v4
    compatibility mode so the existing palette and the unlayered :root HSL triplets below keep working. */

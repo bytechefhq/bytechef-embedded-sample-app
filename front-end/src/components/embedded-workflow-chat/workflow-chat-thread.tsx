@@ -3,6 +3,7 @@
 import {
     ActionBarMorePrimitive,
     ActionBarPrimitive,
+    type AssistantState,
     AuiIf,
     BranchPickerPrimitive,
     ComposerPrimitive,
@@ -53,7 +54,14 @@ interface ThreadPropsI {
     dataComponents?: Record<string, DataMessagePartComponent>;
 }
 
+// Startup exposes a loading placeholder thread; treat it as a new chat so the composer mounts
+// centered with the suggestions below it. Loads after startup keep the docked (sticky) layout.
+const isNewChatView = (state: AssistantState) =>
+    state.thread.messages.length === 0 && (!state.thread.isLoading || state.threads.isLoading);
+
 export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents}) => {
+    const isEmpty = useAuiState(isNewChatView);
+
     return (
         <ThreadDataComponentsContext.Provider value={dataComponents}>
             <ThreadPrimitive.Root
@@ -69,8 +77,13 @@ export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents}) => {
                     data-slot="aui_thread-viewport"
                     className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
                 >
-                    <div className="mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4">
-                        <AuiIf condition={(state) => state.thread.isEmpty}>
+                    <div
+                        className={twMerge(
+                            'mx-auto flex w-full max-w-(--thread-max-width) flex-1 flex-col px-4 pt-4',
+                            isEmpty && 'justify-center'
+                        )}
+                    >
+                        <AuiIf condition={isNewChatView}>
                             <ThreadWelcome />
                         </AuiIf>
 
@@ -81,9 +94,17 @@ export const WorkflowChatThread: FC<ThreadPropsI> = ({dataComponents}) => {
                             <ThreadPrimitive.Messages>{() => <ThreadMessage />}</ThreadPrimitive.Messages>
                         </div>
 
-                        <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer bg-background sticky bottom-0 mt-auto flex flex-col gap-4 overflow-visible rounded-t-(--composer-radius) pb-4 md:pb-6">
+                        <ThreadPrimitive.ViewportFooter
+                            className={twMerge(
+                                'aui-thread-viewport-footer bg-background flex flex-col gap-4 overflow-visible pb-4 md:pb-6',
+                                !isEmpty && 'sticky bottom-0 mt-auto rounded-t-(--composer-radius)'
+                            )}
+                        >
                             <ThreadScrollToBottom />
                             <Composer />
+                            <AuiIf condition={(state) => isNewChatView(state) && state.composer.isEmpty}>
+                                <ThreadSuggestions />
+                            </AuiIf>
                         </ThreadPrimitive.ViewportFooter>
                     </div>
                 </ThreadPrimitive.Viewport>
@@ -123,20 +144,10 @@ const ThreadScrollToBottom: FC = () => {
 
 const ThreadWelcome: FC = () => {
     return (
-        <div className="aui-thread-welcome-root my-auto flex grow flex-col">
-            <div className="aui-thread-welcome-center flex w-full grow flex-col items-center justify-center">
-                <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-4">
-                    <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-semibold duration-200">
-                        Hello there!
-                    </h1>
-
-                    <p className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-muted-foreground text-xl delay-75 duration-200">
-                        How can I help you today?
-                    </p>
-                </div>
-            </div>
-
-            <ThreadSuggestions />
+        <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-center">
+            <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-semibold duration-200">
+                How can I help you today?
+            </h1>
         </div>
     );
 };
@@ -145,7 +156,7 @@ const ThreadWelcome: FC = () => {
 // EmbeddedCopilotRuntimeProvider; ThreadPrimitive.Suggestions reads them from `s.suggestions.suggestions`.
 const ThreadSuggestions: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestions grid w-full gap-2 pb-4 @md:grid-cols-2">
+        <div className="aui-thread-welcome-suggestions flex w-full flex-wrap items-center justify-center gap-2 px-4">
             <ThreadPrimitive.Suggestions>{() => <ThreadSuggestionItem />}</ThreadPrimitive.Suggestions>
         </div>
     );
@@ -153,16 +164,18 @@ const ThreadSuggestions: FC = () => {
 
 const ThreadSuggestionItem: FC = () => {
     return (
-        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200 [&:nth-child(n+3)]:hidden @md:[&:nth-child(n+3)]:block">
-            <SuggestionPrimitive.Trigger send asChild>
-                <Button
-                    variant="ghost"
-                    className="aui-thread-welcome-suggestion bg-background hover:bg-muted h-auto w-full flex-1 flex-wrap items-start justify-start gap-1 rounded-3xl border border-border px-5 py-4 text-start text-sm transition-colors @md:flex-col"
-                >
-                    <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1 font-medium" />
-
-                    <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 text-muted-foreground empty:hidden" />
-                </Button>
+        <div className="aui-thread-welcome-suggestion-display fade-in slide-in-from-bottom-2 animate-in fill-mode-both duration-200">
+            <SuggestionPrimitive.Trigger
+                send
+                render={
+                    <Button
+                        variant="ghost"
+                        className="aui-thread-welcome-suggestion text-foreground hover:bg-muted border-border/60 h-auto gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-normal whitespace-nowrap transition-colors"
+                    />
+                }
+            >
+                <SuggestionPrimitive.Title className="aui-thread-welcome-suggestion-text-1" />
+                <SuggestionPrimitive.Description className="aui-thread-welcome-suggestion-text-2 empty:hidden" />
             </SuggestionPrimitive.Trigger>
         </div>
     );

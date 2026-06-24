@@ -190,7 +190,20 @@ export default function AutomationsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-x-4">
+                  <div className="flex shrink-0 items-center gap-x-6">
+                    {workflow.createdDate && (
+                      <div className="hidden sm:flex sm:flex-col sm:items-end">
+                        <p className="text-xs text-muted-foreground">Created</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(workflow.createdDate).toLocaleDateString(undefined, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    )}
+
                     <div className="hidden sm:flex sm:flex-col sm:items-end">
                       <p className="text-sm text-muted-foreground">
                         {workflow.workflowUuid || "No reference code"}

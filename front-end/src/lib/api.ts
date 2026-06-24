@@ -24,9 +24,11 @@ interface TokenResponse {
 
 // Workflow interfaces
 export interface Workflow {
+  createdDate?: string;
   description: string;
   enabled: boolean;
   label: string;
+  lastModifiedDate?: string;
   name: string;
   workflowUuid?: string;
   workflowVersion?: number;

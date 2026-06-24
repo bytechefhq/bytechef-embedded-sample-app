@@ -66,6 +66,55 @@ const humanizeRunError = (raw: string): string => {
     return raw;
 };
 
+/**
+ * AG-UI tool results arrive as a string in `content`. Parse JSON payloads so the renderer can pretty-print
+ * them; fall back to the raw string for plain-text results.
+ */
+const parseToolResult = (content: string): unknown => {
+    if (typeof content !== 'string') {
+        return content;
+    }
+
+    try {
+        return JSON.parse(content);
+    } catch {
+        return content;
+    }
+};
+
+/**
+ * Interactive tools (askUserQuestion, selectPropertyOption) return a JSON envelope with a `kind` field
+ * instead of a plain result. Mirrors the web client's toToolResultDataPart: a recognized `kind` is rendered
+ * by a dedicated dataComponents entry (the picker UI) rather than the generic tool-call fallback. The value
+ * is the `data-<kind>` part type the thread maps back to its renderer. Only kinds with a renderer in
+ * embeddedChatDataComponents are listed; unknown kinds fall through to the plain tool-result rendering.
+ */
+const TOOL_RESULT_KIND_TO_DATA_PART_TYPE: Record<string, `data-${string}`> = {
+    'ask-user-question': 'data-ask-user-question',
+    'create-connection': 'data-create-connection',
+    'select-connection': 'data-select-connection',
+    'select-property-option': 'data-select-property-option',
+};
+
+const renderableDataPartType = (result: unknown): `data-${string}` | undefined => {
+    if (result != null && typeof result === 'object') {
+        const kind = (result as {kind?: unknown}).kind;
+
+        if (typeof kind === 'string') {
+            return TOOL_RESULT_KIND_TO_DATA_PART_TYPE[kind];
+        }
+    }
+
+    return undefined;
+};
+
+/**
+ * AG-UI has no explicit tool-error flag; a tool that returns an `{error: "…"}` envelope (e.g. askUserQuestion's
+ * chip-length validation) is surfaced as an error on the tool card.
+ */
+const isErrorResult = (result: unknown): boolean =>
+    result != null && typeof result === 'object' && typeof (result as {error?: unknown}).error === 'string';
+
 const convertMessage = (message: ThreadMessageLike): ThreadMessageLike => message;
 
 export function EmbeddedCopilotRuntimeProvider({
@@ -81,14 +130,25 @@ export function EmbeddedCopilotRuntimeProvider({
 }: Readonly<EmbeddedCopilotRuntimeProviderPropsI>) {
     const [isRunning, setIsRunning] = useState(false);
 
-    const {addMessage, appendToLastAssistantMessage, conversationId, editUserMessage, messages, setMessages} = chatStore(
+    const {
+        addMessage,
+        addToolCallPart,
+        appendToLastAssistantMessage,
+        conversationId,
+        editUserMessage,
+        messages,
+        setMessages,
+        updateToolCallPart,
+    } = chatStore(
         useShallow((state) => ({
             addMessage: state.addMessage,
+            addToolCallPart: state.addToolCallPart,
             appendToLastAssistantMessage: state.appendToLastAssistantMessage,
             conversationId: state.conversationId,
             editUserMessage: state.editUserMessage,
             messages: state.messages,
             setMessages: state.setMessages,
+            updateToolCallPart: state.updateToolCallPart,
         }))
     );
 
@@ -150,10 +210,40 @@ export function EmbeddedCopilotRuntimeProvider({
                 appendToLastAssistantMessage(textMessageBuffer);
             },
             onToolCallStartEvent: ({event}) => {
-                addMessage({
-                    content: [{args: {}, argsText: '', toolCallId: event.toolCallId, toolName: event.toolCallName, type: 'tool-call'}],
-                    role: 'assistant',
+                addToolCallPart({
+                    args: {},
+                    argsText: '',
+                    toolCallId: event.toolCallId,
+                    toolName: event.toolCallName,
+                    type: 'tool-call',
                 });
+            },
+            // Stream the model's argument JSON into the tool-call part so the expanded panel shows the inputs.
+            onToolCallArgsEvent: ({event, partialToolCallArgs, toolCallBuffer}) => {
+                updateToolCallPart(event.toolCallId, {args: partialToolCallArgs ?? {}, argsText: toolCallBuffer});
+            },
+            // Pin the final parsed arguments once the call closes (covers tools whose args arrive without deltas).
+            onToolCallEndEvent: ({event, toolCallArgs}) => {
+                if (toolCallArgs !== undefined) {
+                    updateToolCallPart(event.toolCallId, {
+                        args: toolCallArgs,
+                        argsText: JSON.stringify(toolCallArgs, null, 2),
+                    });
+                }
+            },
+            // Attach the tool result to its card (Input/Result + status icon). Interactive tools
+            // (askUserQuestion, selectPropertyOption) additionally return a `kind` envelope that is appended as a
+            // data part so its picker UI renders below the card — mirroring AI Hub, which shows both.
+            onToolCallResultEvent: ({event}) => {
+                const result = parseToolResult(event.content);
+
+                updateToolCallPart(event.toolCallId, {isError: isErrorResult(result), result});
+
+                const dataPartType = renderableDataPartType(result);
+
+                if (dataPartType) {
+                    addMessage({content: [{data: result, type: dataPartType}], role: 'assistant'});
+                }
             },
         };
 

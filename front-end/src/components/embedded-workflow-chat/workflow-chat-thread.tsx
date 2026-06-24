@@ -35,7 +35,6 @@ import {twMerge} from 'tailwind-merge';
 import {MarkdownText} from './assistant-ui/markdown-text';
 import {Reasoning, ReasoningContent, ReasoningRoot, ReasoningText, ReasoningTrigger} from './assistant-ui/reasoning';
 import {ToolFallback} from './assistant-ui/tool-fallback';
-import {ToolGroupContent, ToolGroupRoot, ToolGroupTrigger} from './assistant-ui/tool-group';
 import {Button, TooltipIconButton} from './assistant-ui/tooltip-icon-button';
 
 /**
@@ -134,9 +133,9 @@ const ThreadScrollToBottom: FC = () => {
             <TooltipIconButton
                 tooltip="Scroll to bottom"
                 variant="outline"
-                className="aui-thread-scroll-to-bottom dark:border-border dark:bg-background dark:hover:bg-accent absolute -top-12 z-10 self-center rounded-full p-4 disabled:invisible"
+                className="aui-thread-scroll-to-bottom dark:border-border dark:bg-background dark:hover:bg-accent absolute -top-12 z-10 size-9 self-center rounded-full p-0 disabled:invisible"
             >
-                <ArrowDownIcon />
+                <ArrowDownIcon className="size-4 shrink-0" />
             </TooltipIconButton>
         </ThreadPrimitive.ScrollToBottom>
     );
@@ -213,7 +212,7 @@ const ComposerAction: FC = () => {
                         type="button"
                         variant="default"
                         size="icon"
-                        className="aui-composer-send size-8 rounded-full"
+                        className="aui-composer-send size-8 rounded-full disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
                         aria-label="Send message"
                     >
                         <ArrowUpIcon className="aui-composer-send-icon size-4" />
@@ -267,7 +266,6 @@ const AssistantMessage: FC = () => {
                 <MessagePrimitive.GroupedParts
                     groupBy={groupPartByType({
                         reasoning: ['group-chainOfThought', 'group-reasoning'],
-                        'tool-call': ['group-chainOfThought', 'group-tool'],
                     })}
                 >
                     {({children, part}) => {
@@ -286,16 +284,6 @@ const AssistantMessage: FC = () => {
                                     </ReasoningRoot>
                                 );
                             }
-                            case 'group-tool':
-                                return (
-                                    <ToolGroupRoot>
-                                        <ToolGroupTrigger
-                                            count={part.indices.length}
-                                            active={part.status.type === 'running'}
-                                        />
-                                        <ToolGroupContent>{children}</ToolGroupContent>
-                                    </ToolGroupRoot>
-                                );
                             case 'text':
                                 return <MarkdownText />;
                             case 'reasoning':

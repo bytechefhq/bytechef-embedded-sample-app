@@ -1,7 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import {type DataMessagePartProps, useThreadRuntime} from '@assistant-ui/react';
-import {AlertCircleIcon, CheckIcon} from 'lucide-react';
-import {useMemo, useState} from 'react';
+import {useConnectDialog} from '@bytechef/embedded';
+import {AlertCircleIcon, CheckIcon, PlugIcon} from 'lucide-react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+
+import {useEmbeddedChatConfig} from './chat-config-context';
 
 export interface AskUserQuestionOptionDataI {
     description?: string;
@@ -69,7 +72,12 @@ const AskUserQuestionMessage = ({data}: DataMessagePartProps<AskUserQuestionData
         const summary =
             totalSteps === 1
                 ? answer
-                : questions.map((question: AskUserQuestionDataI['questions'][number], index: number) => `- ${question.question} → ${nextAnswers[index] ?? ''}`).join('\n');
+                : questions
+                      .map(
+                          (question: AskUserQuestionDataI['questions'][number], index: number) =>
+                              `- ${question.question} → ${nextAnswers[index] ?? ''}`
+                      )
+                      .join('\n');
 
         const messageText = totalSteps === 1 ? `User picked: ${answer}` : `User picked:\n${summary}`;
 
@@ -91,7 +99,9 @@ const AskUserQuestionMessage = ({data}: DataMessagePartProps<AskUserQuestionData
                         Question {stepIndex + 1} of {totalSteps}
                     </span>
 
-                    {currentQuestion.header && <span className="font-semibold uppercase">{currentQuestion.header}</span>}
+                    {currentQuestion.header && (
+                        <span className="font-semibold uppercase">{currentQuestion.header}</span>
+                    )}
                 </div>
             )}
 
@@ -209,7 +219,10 @@ const SelectPropertyOptionMessage = ({data}: DataMessagePartProps<SelectProperty
     const options = useMemo(() => data.options ?? [], [data.options]);
 
     const filteredOptions = useMemo(
-        () => options.filter((option: SelectPropertyOptionItemI) => option.label.toLowerCase().includes(filterText.toLowerCase())),
+        () =>
+            options.filter((option: SelectPropertyOptionItemI) =>
+                option.label.toLowerCase().includes(filterText.toLowerCase())
+            ),
         [filterText, options]
     );
 
@@ -274,9 +287,322 @@ const SelectPropertyOptionMessage = ({data}: DataMessagePartProps<SelectProperty
     );
 };
 
+export interface CreateConnectionDataI {
+    componentLabel?: string;
+    componentName: string;
+    kind: 'create-connection';
+    suggestedName?: string;
+}
+
+/**
+ * Mounts the embedded ConnectDialog for a resolved integration. Mirrors the Integrations page pattern: opens the
+ * dialog on mount and watches the shared portal so the parent learns when the user closes it.
+ */
+function ConnectDialogOpener({
+    baseUrl,
+    environment,
+    integrationId,
+    jwtToken,
+    onDone,
+}: {
+    baseUrl: string;
+    environment: string;
+    integrationId: string;
+    jwtToken: string;
+    onDone: () => void;
+}) {
+    const {closeDialog, openDialog} = useConnectDialog({baseUrl, environment, integrationId, jwtToken});
+
+    useEffect(() => {
+        openDialog();
+
+        const portal = document.getElementById('connect-dialog-portal');
+
+        const observer = new MutationObserver(() => {
+            const currentPortal = document.getElementById('connect-dialog-portal');
+
+            if (currentPortal && currentPortal.childNodes.length === 0) {
+                onDone();
+            }
+        });
+
+        if (portal) {
+            observer.observe(portal, {childList: true});
+        }
+
+        return () => {
+            observer.disconnect();
+            closeDialog();
+        };
+        // openDialog/closeDialog are recreated each render; opening once on mount is intentional.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return null;
+}
+
+/**
+ * Renders the createConnection tool result as a "Connect <component>" button that opens the embedded ConnectDialog.
+ * The tool reports componentName/componentLabel; the integrationId the dialog needs is resolved by matching the
+ * component against the connected user's integrations.
+ */
+const CreateConnectionMessage = ({data}: DataMessagePartProps<CreateConnectionDataI>) => {
+    const [integrationId, setIntegrationId] = useState<string | null>(null);
+    const [opening, setOpening] = useState(false);
+    const [connected, setConnected] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const config = useEmbeddedChatConfig();
+
+    const label = data.componentLabel || data.componentName;
+
+    const handleConnect = useCallback(async () => {
+        if (!config) {
+            return;
+        }
+
+        setOpening(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`${config.baseUrl}/api/embedded/v1/integrations`, {
+                cache: 'no-cache',
+                headers: {Authorization: `Bearer ${config.jwtToken}`, 'X-ENVIRONMENT': config.environment},
+                method: 'GET',
+            });
+
+            const integrations = (await response.json()) as Array<{componentName: string; id: number}>;
+
+            const integration = integrations.find(
+                (curIntegration) => curIntegration.componentName === data.componentName
+            );
+
+            if (!integration) {
+                setError(`No integration is available for ${label}.`);
+                setOpening(false);
+
+                return;
+            }
+
+            setIntegrationId(String(integration.id));
+        } catch {
+            setError(`Couldn't open the connect dialog for ${label}.`);
+            setOpening(false);
+        }
+    }, [config, data.componentName, label]);
+
+    if (connected) {
+        return (
+            <div className="mt-2 flex items-center gap-2 rounded-md border border-border bg-muted/30 p-3 text-sm">
+                <CheckIcon className="size-4 text-emerald-600" />
+
+                <span>
+                    Connected <span className="font-medium">{label}</span>
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="mt-2 flex flex-col items-start gap-2 rounded-md border border-border bg-muted/30 p-3">
+            <button
+                className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={opening || !config}
+                onClick={handleConnect}
+                type="button"
+            >
+                <PlugIcon className="size-4" />
+
+                {opening ? `Connecting ${label}…` : `Connect ${label}`}
+            </button>
+
+            {error && <span className="text-xs text-red-500">{error}</span>}
+
+            {integrationId && config && (
+                <ConnectDialogOpener
+                    baseUrl={config.baseUrl}
+                    environment={config.environment}
+                    integrationId={integrationId}
+                    jwtToken={config.jwtToken}
+                    onDone={() => {
+                        setIntegrationId(null);
+                        setOpening(false);
+                        setConnected(true);
+                    }}
+                />
+            )}
+        </div>
+    );
+};
+
+export interface SelectConnectionDataI {
+    componentLabel?: string;
+    componentName: string;
+    kind: 'select-connection';
+}
+
+interface ConnectionRowI {
+    id: number;
+    name: string;
+}
+
+/**
+ * Renders the selectConnection tool result. The tool reports only componentName/componentLabel, so this fetches the
+ * connected user's connections for the component (their IntegrationInstances). Per spec it only renders a picker when
+ * there is more than one connection; a single connection is selected automatically without prompting.
+ */
+const SelectConnectionMessage = ({data}: DataMessagePartProps<SelectConnectionDataI>) => {
+    const [connections, setConnections] = useState<ConnectionRowI[] | null>(null);
+    const [filterText, setFilterText] = useState('');
+    const [picked, setPicked] = useState<ConnectionRowI | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const submittedRef = useRef(false);
+
+    const config = useEmbeddedChatConfig();
+    const threadRuntime = useThreadRuntime();
+
+    const label = data.componentLabel || data.componentName;
+
+    const submitConnection = useCallback(
+        (connection: ConnectionRowI) => {
+            if (submittedRef.current) {
+                return;
+            }
+
+            submittedRef.current = true;
+
+            setPicked(connection);
+
+            threadRuntime.append({
+                content: [
+                    {
+                        text: `User selected connection: ${connection.name} (connectionId: ${connection.id})`,
+                        type: 'text',
+                    },
+                ],
+                role: 'system',
+            });
+        },
+        [threadRuntime]
+    );
+
+    const filteredConnections = useMemo(
+        () =>
+            (connections ?? []).filter((connection) =>
+                connection.name.toLowerCase().includes(filterText.toLowerCase())
+            ),
+        [connections, filterText]
+    );
+
+    useEffect(() => {
+        if (!config) {
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadConnections = async () => {
+            try {
+                const response = await fetch(
+                    `${config.baseUrl}/api/embedded/v1/components/${data.componentName}/connections`,
+                    {
+                        cache: 'no-cache',
+                        headers: {Authorization: `Bearer ${config.jwtToken}`, 'X-Environment': config.environment},
+                        method: 'GET',
+                    }
+                );
+
+                const rows = (await response.json()) as ConnectionRowI[];
+
+                if (cancelled) {
+                    return;
+                }
+
+                setConnections(rows);
+
+                // Auto-use the only connection without prompting; the picker is for the multi-connection case.
+                if (rows.length === 1) {
+                    submitConnection(rows[0]);
+                }
+            } catch {
+                if (!cancelled) {
+                    setError(`Couldn't load connections for ${label}.`);
+                    setConnections([]);
+                }
+            }
+        };
+
+        loadConnections();
+
+        return () => {
+            cancelled = true;
+        };
+        // Fetch once per component; submitConnection/label are stable enough for this one-shot load.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [config, data.componentName]);
+
+    if (picked) {
+        return (
+            <div className="mt-2 flex items-center gap-2 rounded-md border border-border bg-muted/30 p-3 text-sm">
+                <CheckIcon className="size-4 text-emerald-600" />
+
+                <span>
+                    Using <span className="font-medium">{picked.name}</span>
+                </span>
+            </div>
+        );
+    }
+
+    if (error) {
+        return <span className="mt-2 block text-xs text-red-500">{error}</span>;
+    }
+
+    if (connections === null) {
+        return <div className="mt-2 text-sm text-muted-foreground">Loading {label} connections…</div>;
+    }
+
+    if (connections.length === 0) {
+        return (
+            <div className="mt-2 rounded-md border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                No {label} connections available yet.
+            </div>
+        );
+    }
+
+    return (
+        <div className="mt-2 flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-3">
+            <div className="text-sm">Select a {label} connection</div>
+
+            <input
+                className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-none"
+                onChange={(event) => setFilterText(event.target.value)}
+                placeholder="Search connections…"
+                type="text"
+                value={filterText}
+            />
+
+            <div className="flex flex-col items-start gap-2">
+                {filteredConnections.map((connection) => (
+                    <button
+                        key={connection.id}
+                        className="cursor-pointer rounded-md border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+                        onClick={() => submitConnection(connection)}
+                        type="button"
+                    >
+                        {connection.name}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export const embeddedChatDataComponents = {
     'ask-user-question': (props: DataMessagePartProps<AskUserQuestionDataI>) => <AskUserQuestionMessage {...props} />,
+    'create-connection': (props: DataMessagePartProps<CreateConnectionDataI>) => <CreateConnectionMessage {...props} />,
     'run-error': (props: DataMessagePartProps<RunErrorDataI>) => <RunErrorMessage {...props} />,
+    'select-connection': (props: DataMessagePartProps<SelectConnectionDataI>) => <SelectConnectionMessage {...props} />,
     'select-property-option': (props: DataMessagePartProps<SelectPropertyOptionDataI>) => (
         <SelectPropertyOptionMessage {...props} />
     ),

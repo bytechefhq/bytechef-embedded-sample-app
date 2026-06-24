@@ -1,195 +1,127 @@
 "use client";
 
-import * as Collapsible from '@radix-ui/react-collapsible';
-import {type ToolCallMessagePartComponent, type ToolCallMessagePartStatus, useScrollLock} from '@assistant-ui/react';
-import {AlertCircleIcon, CheckIcon, ChevronDownIcon, LoaderIcon, XCircleIcon} from 'lucide-react';
-import {memo, useCallback, useRef, useState} from 'react';
-import {twMerge} from 'tailwind-merge';
+import {type ToolCallMessagePartComponent} from '@assistant-ui/react';
+import {AlertCircleIcon, CheckCircle2Icon, ChevronDownIcon, ChevronRightIcon, Loader2Icon, WrenchIcon} from 'lucide-react';
+import {memo, useState} from 'react';
 
-const ANIMATION_DURATION = 200;
+type ToolStatus = 'error' | 'running' | 'success';
 
-type ToolStatus = ToolCallMessagePartStatus['type'];
+const StatusIcon = ({status}: {status: ToolStatus}) => {
+    if (status === 'running') {
+        return <Loader2Icon className="size-4 animate-spin text-muted-foreground" />;
+    }
 
-const statusIconMap: Record<ToolStatus, React.ElementType> = {
-    complete: CheckIcon,
-    incomplete: XCircleIcon,
-    'requires-action': AlertCircleIcon,
-    running: LoaderIcon,
+    if (status === 'error') {
+        return <AlertCircleIcon className="size-4 text-red-500" />;
+    }
+
+    return <CheckCircle2Icon className="size-4 text-emerald-600" />;
 };
 
-function ToolFallbackRoot({
-    children,
-    className,
-    defaultOpen = false,
-    onOpenChange: controlledOnOpenChange,
-    open: controlledOpen,
-    ...props
-}: Omit<React.ComponentProps<typeof Collapsible.Root>, 'open' | 'onOpenChange'> & {
-    defaultOpen?: boolean;
-    onOpenChange?: (open: boolean) => void;
-    open?: boolean;
-}) {
-    const collapsibleRef = useRef<HTMLDivElement>(null);
-    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
-    const lockScroll = useScrollLock(collapsibleRef, ANIMATION_DURATION);
+const truncate = (value: string, maxLength: number): string =>
+    value.length <= maxLength ? value : `${value.slice(0, maxLength).trimEnd()}…`;
 
-    const isControlled = controlledOpen !== undefined;
-    const isOpen = isControlled ? controlledOpen : uncontrolledOpen;
+/**
+ * Compact `key: value, …` preview shown inline next to the tool name, mirroring AI Hub's tool card header.
+ */
+const summarizeArgs = (args: Record<string, unknown> | undefined): string => {
+    if (!args) {
+        return '';
+    }
 
-    const handleOpenChange = useCallback(
-        (open: boolean) => {
-            if (!open) {
-                lockScroll();
-            }
+    const entries = Object.entries(args);
 
-            if (!isControlled) {
-                setUncontrolledOpen(open);
-            }
+    if (entries.length === 0) {
+        return '';
+    }
 
-            controlledOnOpenChange?.(open);
-        },
-        [lockScroll, isControlled, controlledOnOpenChange]
-    );
+    const summary = entries
+        .map(([key, value]) => {
+            const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
 
-    return (
-        <Collapsible.Root
-            ref={collapsibleRef}
-            data-slot="tool-fallback-root"
-            open={isOpen}
-            onOpenChange={handleOpenChange}
-            className={twMerge(
-                'aui-tool-fallback-root group/tool-fallback-root w-full rounded-lg border py-3',
-                className
-            )}
-            style={{'--animation-duration': `${ANIMATION_DURATION}ms`} as React.CSSProperties}
-            {...props}
-        >
-            {children}
-        </Collapsible.Root>
-    );
-}
+            return `${key}: ${truncate(stringValue ?? '', 40)}`;
+        })
+        .join(', ');
 
-function ToolFallbackTrigger({
-    className,
-    status,
-    toolName,
-    ...props
-}: React.ComponentProps<typeof Collapsible.Trigger> & {
-    status?: ToolCallMessagePartStatus;
-    toolName: string;
-}) {
-    const statusType = status?.type ?? 'complete';
-    const isRunning = statusType === 'running';
-    const isCancelled = status?.type === 'incomplete' && status.reason === 'cancelled';
+    return truncate(summary, 80);
+};
 
-    const Icon = statusIconMap[statusType];
-    const label = isCancelled ? 'Cancelled tool' : 'Used tool';
+const JsonViewer = ({label, value}: {label: string; value: unknown}) => {
+    if (value === undefined || value === null) {
+        return null;
+    }
+
+    const display = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 
     return (
-        <Collapsible.Trigger
-            data-slot="tool-fallback-trigger"
-            className={twMerge(
-                'aui-tool-fallback-trigger group/trigger flex w-full items-center gap-2 px-4 text-sm transition-colors',
-                className
-            )}
-            {...props}
-        >
-            <Icon
-                className={twMerge(
-                    'aui-tool-fallback-trigger-icon size-4 shrink-0',
-                    isCancelled && 'text-muted-foreground',
-                    isRunning && 'animate-spin'
-                )}
-            />
+        <div className="mt-2 first:mt-0">
+            <div className="mb-1 text-xs font-semibold text-muted-foreground">{label}</div>
 
-            <span
-                className={twMerge(
-                    'aui-tool-fallback-trigger-label-wrapper relative inline-block grow text-start leading-none',
-                    isCancelled && 'text-muted-foreground line-through'
-                )}
+            <pre className="max-h-60 overflow-auto rounded-md bg-muted px-2 py-1.5 text-xs leading-snug whitespace-pre-wrap">
+                {display}
+            </pre>
+        </div>
+    );
+};
+
+/**
+ * Tool-call card matching AI Hub's AiHubToolCallRenderer: a collapsible row with a `toolName — args preview`
+ * header, a status icon (running / error / success), and Input/Result sections when expanded. AG-UI doesn't
+ * supply an explicit error flag, so an error is inferred from an `{error: "…"}` result envelope (the shape
+ * returned by validation failures such as askUserQuestion's chip-length guard).
+ */
+const ToolFallbackImpl: ToolCallMessagePartComponent = ({args, argsText, isError, result, toolName}) => {
+    const [expanded, setExpanded] = useState(false);
+
+    const argsObject = args && typeof args === 'object' ? (args as Record<string, unknown>) : undefined;
+    const argsSummary = argsObject ? summarizeArgs(argsObject) : argsText ? truncate(argsText, 80) : '';
+
+    const resultHasError =
+        result != null && typeof result === 'object' && typeof (result as {error?: unknown}).error === 'string';
+
+    const status: ToolStatus = result === undefined ? 'running' : isError || resultHasError ? 'error' : 'success';
+
+    const inputValue = argsObject && Object.keys(argsObject).length > 0 ? argsObject : argsText || undefined;
+
+    return (
+        <div className="my-2 flex w-full flex-col rounded-lg border border-border bg-muted/30 text-sm">
+            <button
+                aria-expanded={expanded}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-accent/50"
+                onClick={() => setExpanded((previous) => !previous)}
+                type="button"
             >
-                <span>
-                    {label}: <b>{toolName}</b>
-                </span>
+                {expanded ? (
+                    <ChevronDownIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                ) : (
+                    <ChevronRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                )}
 
-                {isRunning && (
-                    <span aria-hidden className="shimmer pointer-events-none absolute inset-0 motion-reduce:animate-none">
-                        {label}: <b>{toolName}</b>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />
+
+                    <span className="truncate font-medium text-foreground">{toolName}</span>
+
+                    {argsSummary && <span className="truncate text-xs text-muted-foreground">— {argsSummary}</span>}
+
+                    <span className="ml-auto flex items-center">
+                        <StatusIcon status={status} />
                     </span>
-                )}
-            </span>
+                </div>
+            </button>
 
-            <ChevronDownIcon
-                className={twMerge(
-                    'aui-tool-fallback-trigger-chevron size-4 shrink-0',
-                    'transition-transform duration-(--animation-duration) ease-out',
-                    'group-data-[state=closed]/trigger:-rotate-90',
-                    'group-data-[state=open]/trigger:rotate-0'
-                )}
-            />
-        </Collapsible.Trigger>
-    );
-}
+            {expanded && (
+                <div className="border-t border-border px-3 py-2">
+                    <JsonViewer label="Input" value={inputValue} />
 
-function ToolFallbackContent({children, className, ...props}: React.ComponentProps<typeof Collapsible.Content>) {
-    return (
-        <Collapsible.Content
-            className={twMerge(
-                'aui-tool-fallback-content relative overflow-hidden text-sm outline-none',
-                'data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down',
-                'data-[state=closed]:fill-mode-forwards data-[state=closed]:pointer-events-none',
-                'data-[state=open]:duration-(--animation-duration) data-[state=closed]:duration-(--animation-duration)',
-                className
+                    <JsonViewer label="Result" value={result} />
+
+                    {inputValue === undefined && result === undefined && (
+                        <div className="text-xs text-muted-foreground italic">No input or result.</div>
+                    )}
+                </div>
             )}
-            {...props}
-        >
-            <div className="mt-3 flex flex-col gap-2 border-t pt-2">{children}</div>
-        </Collapsible.Content>
-    );
-}
-
-const ToolFallbackImpl: ToolCallMessagePartComponent = ({argsText, result, status, toolName}) => {
-    const isCancelled = status?.type === 'incomplete' && status.reason === 'cancelled';
-
-    return (
-        <ToolFallbackRoot className={twMerge(isCancelled && 'border-muted-foreground/30 bg-muted/30')}>
-            <ToolFallbackTrigger status={status} toolName={toolName} />
-
-            <ToolFallbackContent>
-                {status?.type === 'incomplete' && (() => {
-                    const error = status.error;
-                    const errorText = error ? (typeof error === 'string' ? error : JSON.stringify(error)) : null;
-
-                    if (!errorText) {
-                        return null;
-                    }
-
-                    const headerText = status.reason === 'cancelled' ? 'Cancelled reason:' : 'Error:';
-
-                    return (
-                        <div className="aui-tool-fallback-error px-4">
-                            <p className="text-muted-foreground font-semibold">{headerText}</p>
-                            <p className="text-muted-foreground">{errorText}</p>
-                        </div>
-                    );
-                })()}
-
-                {argsText && (
-                    <div className={twMerge('aui-tool-fallback-args px-4', isCancelled && 'opacity-60')}>
-                        <pre className="whitespace-pre-wrap">{argsText}</pre>
-                    </div>
-                )}
-
-                {!isCancelled && result !== undefined && (
-                    <div className="aui-tool-fallback-result border-t border-dashed px-4 pt-2">
-                        <p className="font-semibold">Result:</p>
-                        <pre className="whitespace-pre-wrap">
-                            {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-                        </pre>
-                    </div>
-                )}
-            </ToolFallbackContent>
-        </ToolFallbackRoot>
+        </div>
     );
 };
 

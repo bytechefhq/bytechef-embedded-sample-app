@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import {twMerge} from 'tailwind-merge';
 
 import {createSkeletonWorkflow} from './api';
+import {EmbeddedChatConfigContext} from './chat-config-context';
 import {DEFAULT_BASE_URL} from './constants';
 import {embeddedChatDataComponents} from './dataComponents';
 import EmbeddedChatBoundary from './EmbeddedChatBoundary';
@@ -68,28 +69,30 @@ const EmbeddedWorkflowChat = ({
         <div className={twMerge('flex h-full flex-col', className)}>
             <div className="min-h-0 flex-1">
                 <EmbeddedChatBoundary>
-                    <EmbeddedCopilotRuntimeProvider
-                        baseUrl={baseUrl}
-                        chatStore={chatStore}
-                        environment={environment}
-                        jwtToken={jwtToken}
-                        onRunFinished={() => {
-                            if (!readyFiredRef.current) {
-                                readyFiredRef.current = true;
+                    <EmbeddedChatConfigContext.Provider value={{baseUrl, environment, jwtToken}}>
+                        <EmbeddedCopilotRuntimeProvider
+                            baseUrl={baseUrl}
+                            chatStore={chatStore}
+                            environment={environment}
+                            jwtToken={jwtToken}
+                            onRunFinished={() => {
+                                if (!readyFiredRef.current) {
+                                    readyFiredRef.current = true;
 
-                                onWorkflowReady?.(workflowUuid);
-                            }
-                        }}
-                        suggestions={suggestions?.map((suggestion) => ({
-                            label: suggestion.label,
-                            prompt: suggestion.action,
-                            title: suggestion.title,
-                        }))}
-                        systemPrompt={systemPrompt}
-                        workflowUuid={workflowUuid}
-                    >
-                        <WorkflowChatThread dataComponents={embeddedChatDataComponents} />
-                    </EmbeddedCopilotRuntimeProvider>
+                                    onWorkflowReady?.(workflowUuid);
+                                }
+                            }}
+                            suggestions={suggestions?.map((suggestion) => ({
+                                label: suggestion.label,
+                                prompt: suggestion.action,
+                                title: suggestion.title,
+                            }))}
+                            systemPrompt={systemPrompt}
+                            workflowUuid={workflowUuid}
+                        >
+                            <WorkflowChatThread dataComponents={embeddedChatDataComponents} />
+                        </EmbeddedCopilotRuntimeProvider>
+                    </EmbeddedChatConfigContext.Provider>
                 </EmbeddedChatBoundary>
             </div>
         </div>

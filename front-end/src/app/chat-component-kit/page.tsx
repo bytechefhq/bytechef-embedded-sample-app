@@ -12,26 +12,28 @@ import { DefaultChatTransport } from "ai";
 
 // Welcome-screen suggestions registered via the new assistant-ui suggestions API (no longer hardcoded
 // inside the Thread component). ThreadPrimitive.Suggestions renders these from the runtime scope.
+// Curated to reflect the integrations connected in this sample (Slack, Gmail, Mailchimp, AWS S3) and
+// representative actions the assistant's tools can perform for them.
 const SUGGESTIONS: SuggestionConfig[] = [
   {
-    label: "does end-to-end.",
-    prompt: "Describe what this workflow does end-to-end",
-    title: "Describe what this workflow",
+    label: "to a channel",
+    prompt: "Send a Slack message to a channel",
+    title: "Send a Slack message",
   },
   {
-    label: "of this node are required?",
-    prompt: "Which properties of this node are required?",
-    title: "Which properties",
+    label: "with Gmail",
+    prompt: "Draft and send an email with Gmail",
+    title: "Draft and send an email",
   },
   {
-    label: "that can send an email",
-    prompt: "Search for an action that can send an email",
-    title: "Search for an action",
+    label: "to a Mailchimp audience",
+    prompt: "Add a new subscriber to a Mailchimp audience",
+    title: "Add a new subscriber",
   },
   {
-    label: "conditional branching in workflows?",
-    prompt: "How do I implement conditional branching in workflows?",
-    title: "How do I implement",
+    label: "to an AWS S3 bucket",
+    prompt: "Upload a file to an AWS S3 bucket",
+    title: "Upload a file",
   },
 ];
 

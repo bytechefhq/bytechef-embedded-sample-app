@@ -12,6 +12,7 @@ import {
   FilesIcon,
   FoldersIcon,
   HomeIcon,
+  LayoutGridIcon,
   MessageCircleIcon,
   SquareIcon,
   UsersIcon,
@@ -38,6 +39,7 @@ const navigation = [
   { name: 'ComponentKit Chat', href: '/chat-component-kit', icon: MessageCircleIcon },
   { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },
+  { name: 'Automation Hub', href: '/automation-hub', icon: LayoutGridIcon },
   { name: 'Integrations', href: '/integrations', icon: SquareIcon },
 ]
 

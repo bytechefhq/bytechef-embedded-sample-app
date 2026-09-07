@@ -57,8 +57,8 @@ const pages = [
 
 export default function HomePage() {
   return (
-    <div className="w-full p-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="w-full">
+      <h1 className="text-xl font-semibold">Dashboard</h1>
 
       <p className="mt-1 text-muted-foreground">
         An overview of everything you can explore in this embedded sample app.

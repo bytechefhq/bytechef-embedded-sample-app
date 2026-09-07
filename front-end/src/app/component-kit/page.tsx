@@ -68,7 +68,7 @@ export default function ComponentKitPage() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-2xl font-bold">ComponentKit Playground</h1>
+      <h1 className="text-xl font-semibold">ComponentKit Playground</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>

@@ -134,7 +134,7 @@ export default function BuilderPage() {
 
   return (
     <div className="flex w-full justify-center">
-      <div className="grid w-full max-w-7xl grid-cols-1 gap-6 py-4 lg:grid-cols-2">
+      <div className="grid w-full max-w-7xl grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Builder column */}
         <div className="flex flex-col gap-4">
           <h1 className="text-xl font-semibold">Custom Workflow Builder</h1>

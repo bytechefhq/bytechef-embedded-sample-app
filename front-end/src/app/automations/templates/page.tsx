@@ -46,7 +46,7 @@ export default function WorkflowTemplatesPage() {
   return (
     <div className="flex justify-center w-full">
       <div className="flex flex-col gap-4 w-full max-w-5xl">
-        <div className="w-full flex items-center gap-3 py-4">
+        <div className="w-full flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"

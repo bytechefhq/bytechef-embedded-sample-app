@@ -92,8 +92,8 @@ export default function AutomationsPage() {
 
   if (isLoading) {
     return <div className="flex justify-center w-full">
-      <div className="flex flex-col gap-4 w-full max-w-5xl">
-        <div className="w-full flex justify-between items-center py-4">
+      <div className="flex flex-col gap-4 w-full">
+        <div className="w-full flex justify-between items-center">
           Loading...
         </div>
       </div>
@@ -102,8 +102,8 @@ export default function AutomationsPage() {
 
   return (
     <div className="flex justify-center w-full">
-      <div className="flex flex-col gap-4 w-full max-w-5xl">
-        <div className="w-full flex justify-between items-center py-4">
+      <div className="flex flex-col gap-4 w-full">
+        <div className="w-full flex justify-between items-center">
           <h1 className="text-xl font-semibold">Workflows</h1>
 
           <div className="flex">

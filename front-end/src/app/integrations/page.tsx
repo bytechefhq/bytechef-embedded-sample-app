@@ -125,8 +125,8 @@ export default function IntegrationsPage() {
 
   if (isLoading) {
     return <div className="flex justify-center w-full">
-      <div className="flex flex-col gap-4 w-full max-w-5xl">
-        <div className="w-full flex justify-between items-center py-4">
+      <div className="flex flex-col gap-4 w-full">
+        <div className="w-full flex justify-between items-center">
           Loading...
         </div>
       </div>
@@ -135,8 +135,8 @@ export default function IntegrationsPage() {
 
   return (
     <div className="flex justify-center w-full">
-      <div className="flex flex-col gap-4">
-        <div className="w-full text-xl font-semibold py-4">Integrations</div>
+      <div className="flex flex-col gap-4 w-full">
+        <div className="w-full text-xl font-semibold">Integrations</div>
 
         <div className="flex-1">
           <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">

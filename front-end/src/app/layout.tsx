@@ -41,6 +41,7 @@ const navigation = [
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },
   { name: 'Automation Hub', href: '/automation-hub', icon: LayoutGridIcon },
   { name: 'Integrations', href: '/integrations', icon: SquareIcon },
+  { name: 'Integration Marketplace', href: '/integration-marketplace', icon: LayoutGridIcon },
 ]
 
 function classNames(...classes: string[]) {

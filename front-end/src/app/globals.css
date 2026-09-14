@@ -144,4 +144,9 @@
   html {
     @apply font-sans;
   }
+  /* Tailwind v4 dropped v3's pointer cursor on buttons; restore it app-wide. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }

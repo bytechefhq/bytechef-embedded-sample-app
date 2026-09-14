@@ -5,7 +5,7 @@ import ReactSVG from "react-inlinesvg";
 import {useConnectDialog} from "@bytechef/embedded";
 import {getToken} from "@/lib/api";
 
-const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:5173';
+const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:8080';
 const BYTECHEF_ENVIRONMENT = process.env.NEXT_PUBLIC_BYTECHEF_ENVIRONMENT || 'DEVELOPMENT';
 
 interface IntegrationI {

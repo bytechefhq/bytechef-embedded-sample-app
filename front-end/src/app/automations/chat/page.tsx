@@ -9,7 +9,7 @@ import EmbeddedWorkflowChat from "@/components/embedded-workflow-chat";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-const DEFAULT_BYTECHEF_APP_BASE_URL = "http://localhost:5173";
+const DEFAULT_BYTECHEF_APP_BASE_URL = "http://localhost:8080";
 
 export default function GenerateFromChatPage() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);

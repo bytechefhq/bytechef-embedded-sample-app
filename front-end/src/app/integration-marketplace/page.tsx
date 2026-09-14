@@ -4,7 +4,7 @@ import { IntegrationMarketplace } from "@bytechef/embedded";
 import { getToken } from "@/lib/api";
 import { useEffect, useState } from "react";
 
-const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:5173';
+const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:8080';
 
 export default function IntegrationMarketplacePage() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);

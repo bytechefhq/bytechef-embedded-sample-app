@@ -4,9 +4,7 @@ import {useCallback, useEffect, useState} from "react";
 import ReactSVG from "react-inlinesvg";
 import {useConnectDialog} from "@bytechef/embedded";
 import {getToken} from "@/lib/api";
-
-const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:8080';
-const BYTECHEF_ENVIRONMENT = process.env.NEXT_PUBLIC_BYTECHEF_ENVIRONMENT || 'DEVELOPMENT';
+import {BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT} from "@/lib/config";
 
 interface IntegrationI {
   category: string;

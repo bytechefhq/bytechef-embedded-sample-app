@@ -1,10 +1,6 @@
 import { getToken } from "@/lib/api";
+import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
 import { NextResponse } from "next/server";
-
-const BYTECHEF_APP_BASE_URL =
-  process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || "http://localhost:5173";
-const BYTECHEF_ENVIRONMENT =
-  process.env.NEXT_PUBLIC_BYTECHEF_ENVIRONMENT || "DEVELOPMENT";
 
 export async function POST(req: Request) {
   const jwtToken = await getToken();

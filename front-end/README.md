@@ -22,13 +22,31 @@ This is a Next.js application that uses integrations and embeds the ByteChef wor
    npm install
    ```
 
-4. Configure environment variables:
-  - Create or modify the `.env.local` file with the following variables if you need other values than defaults:
+4. Configure environment variables (see [Configuration](#configuration)).
 
-  - `NEXT_PUBLIC_BACKEND_APP_BASE_URL`: The URL of the backend API token endpoint (default: 'http://localhost:3001')
-  - `NEXT_PUBLIC_BYTECHEF_APP_BASE_URL`: The URL of the ByteChef API (default: 'http://localhost:5173')
+## Configuration
 
-  - Adjust the URLs if your backend or ByteChef instance is running on different ports
+Create a `.env.local` file in `front-end/` (it is gitignored). Every variable is optional; set only the ones whose default
+does not fit. All of them are read in `src/lib/config.ts`, except `OPENAI_API_KEY`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `NEXT_PUBLIC_BYTECHEF_APP_BASE_URL` | `http://localhost:8080` | Your ByteChef instance. Use `https://app.bytechef.io` for **ByteChef Cloud**; for a **self-hosted** instance use its URL (`http://localhost:8080` for a default local install). |
+| `NEXT_PUBLIC_BACKEND_APP_BASE_URL` | `http://localhost:3001` | This sample's back-end, which signs the connected-user JWT (`POST /api/token`). |
+| `NEXT_PUBLIC_BYTECHEF_ENVIRONMENT` | `DEVELOPMENT` | ByteChef environment every call targets: `DEVELOPMENT`, `STAGING` or `PRODUCTION`. Sent as the `X-ENVIRONMENT` header; integrations, connections and workflows are separate per environment. |
+| `NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID` | `1234567890` | Your app's id for the demo user. It becomes the JWT `sub` claim, so ByteChef scopes this user's connections and workflows to it. Change it to simulate a different end user. |
+| `NEXT_PUBLIC_BYTECHEF_MCP_SERVER_URL` | *(empty)* | URL of a ByteChef MCP Server. Only needed for the **Chat MCP** page. |
+| `NEXT_PUBLIC_SHARED_CONNECTION_IDS` | *(empty)* | Comma-separated ids of connections (e.g. `12,34`) that the embedded workflow builder and Automation Hub offer to the user in addition to their own. |
+| `OPENAI_API_KEY` | *(none)* | OpenAI API key for the **Chat MCP** and **Chat Component Kit** pages. |
+
+Example for ByteChef Cloud:
+
+```bash
+NEXT_PUBLIC_BYTECHEF_APP_BASE_URL=https://app.bytechef.io
+NEXT_PUBLIC_BYTECHEF_ENVIRONMENT=DEVELOPMENT
+```
+
+Restart `npm run dev` after changing `.env.local`: `NEXT_PUBLIC_*` values are inlined when Next.js compiles the app.
 
 ## Running the Frontend
 

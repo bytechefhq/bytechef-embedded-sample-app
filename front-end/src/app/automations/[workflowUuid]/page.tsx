@@ -1,5 +1,6 @@
 import { EmbeddedWorkflowBuilder } from "@bytechef/embedded";
 import {getToken} from "@/lib/api";
+import {BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT, BYTECHEF_SHARED_CONNECTION_IDS} from "@/lib/config";
 
 export default async function AutomationPage({params}: {params: {workflowUuid: string}}) {
   const { workflowUuid } = await params;
@@ -7,10 +8,10 @@ export default async function AutomationPage({params}: {params: {workflowUuid: s
   const jwtToken = await getToken();
 
   return <EmbeddedWorkflowBuilder
-    baseUrl={`${process.env.BYTECHEF_APP_BASE_URL??'http://127.0.0.1:5173'}`}
+    baseUrl={BYTECHEF_APP_BASE_URL}
     connectionDialogAllowed={true}
-    environment={'DEVELOPMENT'}
+    environment={BYTECHEF_ENVIRONMENT}
     jwtToken={jwtToken}
-    sharedConnectionIds={[1072]}
+    sharedConnectionIds={BYTECHEF_SHARED_CONNECTION_IDS}
     workflowUuid={workflowUuid} />;
 }

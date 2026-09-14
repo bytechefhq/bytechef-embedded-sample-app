@@ -4,12 +4,11 @@ import { ExternalLinkIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getToken } from "@/lib/api";
+import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
 import EmbeddedWorkflowChat from "@/components/embedded-workflow-chat";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-const DEFAULT_BYTECHEF_APP_BASE_URL = "http://localhost:8080";
 
 export default function GenerateFromChatPage() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);
@@ -50,8 +49,8 @@ export default function GenerateFromChatPage() {
       <div className="min-h-0 flex-1">
         {jwtToken ? (
           <EmbeddedWorkflowChat
-            baseUrl={process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL ?? DEFAULT_BYTECHEF_APP_BASE_URL}
-            environment="DEVELOPMENT"
+            baseUrl={BYTECHEF_APP_BASE_URL}
+            environment={BYTECHEF_ENVIRONMENT}
             jwtToken={jwtToken}
             onWorkflowReady={setWorkflowUuid}
             suggestions={[

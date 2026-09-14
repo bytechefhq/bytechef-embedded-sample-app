@@ -39,12 +39,27 @@ npm run build
 
 ## Configuration
 
-The server can be configured using environment variables or the `.env` file:
+The server can be configured using environment variables or a `.env` file in `back-end/` (it is gitignored):
 
-- `PORT`: The port on which the server will run (default: 3001)
-- `TOKEN_EXPIRY`: The expiry time for generated tokens (default: 1h)
-- `BYTECHEF_PRIVATE_KEY`: The private key used for signing JWT tokens (required, obtained from Signing Keys settings)
-- `BYTECHEF_KID`: The key ID to include in the JWT header (required, obtained from Signing Keys settings)
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `BYTECHEF_PRIVATE_KEY` | yes | - | PEM private key of a ByteChef **Signing Key**, used to sign the connected-user JWT with RS256. Wrap the multi-line value in double quotes. |
+| `BYTECHEF_KID` | yes | - | **Key Id** of that same Signing Key. It is written to the JWT `kid` header so ByteChef knows which public key to verify with. |
+| `PORT` | no | `3001` | Port this server listens on. If you change it, set `NEXT_PUBLIC_BACKEND_APP_BASE_URL` in the front-end to match. |
+| `TOKEN_EXPIRY` | no | `1h` | Lifetime of each issued JWT, in [`jsonwebtoken` format](https://github.com/vercel/ms) (`30m`, `1h`, `7d`). |
+
+Example:
+
+```bash
+BYTECHEF_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+...your private key from Signing Keys...
+-----END PRIVATE KEY-----"
+BYTECHEF_KID=<your-key-id>
+```
+
+The Signing Key must come from the same ByteChef instance the front-end points at: a key created on ByteChef Cloud
+(`https://app.bytechef.io`) will not verify on a self-hosted instance, and vice versa. A mismatch shows up as `403`
+responses from every embedded API call.
 
 ## Getting the Private Key and KID
 

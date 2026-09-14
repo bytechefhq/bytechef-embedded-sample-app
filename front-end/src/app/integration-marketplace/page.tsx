@@ -2,9 +2,8 @@
 
 import { IntegrationMarketplace } from "@bytechef/embedded";
 import { getToken } from "@/lib/api";
+import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
 import { useEffect, useState } from "react";
-
-const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || 'http://localhost:8080';
 
 export default function IntegrationMarketplacePage() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);
@@ -26,7 +25,7 @@ export default function IntegrationMarketplacePage() {
       <IntegrationMarketplace
         baseUrl={BYTECHEF_APP_BASE_URL}
         className="min-h-0 flex-1"
-        environment={'DEVELOPMENT'}
+        environment={BYTECHEF_ENVIRONMENT}
         jwtToken={jwtToken}
         mapObjectFields={{
           Contacts: {

@@ -12,10 +12,7 @@ import {
 } from "ai";
 
 import { getToken } from "@/lib/api";
-
-const BYTECHEF_APP_BASE_URL = process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL || "http://localhost:5173";
-const BYTECHEF_ENVIRONMENT = process.env.NEXT_PUBLIC_BYTECHEF_ENVIRONMENT || "DEVELOPMENT";
-const BYTECHEF_EXTERNAL_USER_ID = process.env.NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID || "1234567890";
+import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT, BYTECHEF_EXTERNAL_USER_ID } from "@/lib/config";
 
 interface ByteChefToolI {
   type: string;

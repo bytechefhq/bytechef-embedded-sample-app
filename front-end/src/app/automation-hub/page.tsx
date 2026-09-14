@@ -1,5 +1,6 @@
 import { AutomationHub } from "@bytechef/embedded";
 import {getToken} from "@/lib/api";
+import {BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT, BYTECHEF_SHARED_CONNECTION_IDS} from "@/lib/config";
 
 export default async function AutomationHubPage() {
   const jwtToken = await getToken();
@@ -11,12 +12,12 @@ export default async function AutomationHubPage() {
       </header>
 
       <AutomationHub
-        baseUrl={`${process.env.BYTECHEF_APP_BASE_URL??'http://127.0.0.1:5173'}`}
+        baseUrl={BYTECHEF_APP_BASE_URL}
         className="min-h-0 flex-1"
         connectionDialogAllowed={true}
-        environment={'DEVELOPMENT'}
+        environment={BYTECHEF_ENVIRONMENT}
         jwtToken={jwtToken}
-        sharedConnectionIds={[1072]} />
+        sharedConnectionIds={BYTECHEF_SHARED_CONNECTION_IDS} />
     </div>
   );
 }

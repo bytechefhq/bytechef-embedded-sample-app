@@ -1,14 +1,17 @@
 // API utility functions for making authenticated requests
 
+import {
+  BACKEND_APP_BASE_URL,
+  BYTECHEF_APP_BASE_URL,
+  BYTECHEF_ENVIRONMENT,
+  BYTECHEF_EXTERNAL_USER_ID,
+} from "@/lib/config";
+
 // Store token in memory
 let authToken: string | null = null;
 
-// Default configuration
-const DEFAULT_BACKEND_APP_BASE_URL = 'http://localhost:3001';
-const DEFAULT_BYTECHEF_APP_BASE_URL = 'http://localhost:5173';
-
 const DEFAULT_USER_PAYLOAD = {
-    externalUserId: process.env.NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID || '1234567890',
+    externalUserId: BYTECHEF_EXTERNAL_USER_ID,
     name: 'John Doe'
 } as const;
 
@@ -306,10 +309,10 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
   const headers = {
     ...options.headers,
     'Authorization': `Bearer ${token}`,
-    'X-ENVIRONMENT': 'development'
+    'X-ENVIRONMENT': BYTECHEF_ENVIRONMENT
   };
 
-  return fetch(`${process.env.NEXT_PUBLIC_BYTECHEF_APP_BASE_URL??DEFAULT_BYTECHEF_APP_BASE_URL}${url}`, {
+  return fetch(`${BYTECHEF_APP_BASE_URL}${url}`, {
     ...options,
     headers,
     cache: options.cache || 'no-cache'
@@ -323,7 +326,7 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
  */
 async function fetchToken(userPayload: TokenRequestPayload = DEFAULT_USER_PAYLOAD): Promise<string> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_APP_BASE_URL??DEFAULT_BACKEND_APP_BASE_URL}/api/token`, {
+    const response = await fetch(`${BACKEND_APP_BASE_URL}/api/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

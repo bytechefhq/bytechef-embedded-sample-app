@@ -11,9 +11,7 @@ import {
 } from "ai";
 
 import { getToken } from "@/lib/api";
-
-const BYTECHEF_MCP_SERVER_URL = process.env.NEXT_PUBLIC_BYTECHEF_MCP_SERVER_URL || '';
-const BYTECHEF_ENVIRONMENT = process.env.NEXT_PUBLIC_BYTECHEF_ENVIRONMENT || "DEVELOPMENT";
+import { BYTECHEF_ENVIRONMENT, BYTECHEF_MCP_SERVER_URL } from "@/lib/config";
 
 export async function POST(req: Request) {
   const {

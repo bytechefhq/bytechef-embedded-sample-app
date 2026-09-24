@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   FoldersIcon,
   MessageCircleIcon,
+  PackagePlusIcon,
   SquareIcon,
   WebhookIcon,
   WorkflowIcon,
@@ -28,6 +29,12 @@ const pages = [
     href: "/request",
     icon: WebhookIcon,
     name: "Request Playground"
+  },
+  {
+    description: "Provision a published catalog workflow as a reference for the connected user, then enable and run it.",
+    href: "/automation-workflow",
+    icon: PackagePlusIcon,
+    name: "Automation Workflow Playground"
   },
   {
     description: "Chat with an assistant backed by the embedded MCP server and its available tools.",

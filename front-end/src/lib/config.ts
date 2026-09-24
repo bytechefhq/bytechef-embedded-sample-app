@@ -15,9 +15,3 @@ export const BYTECHEF_ENVIRONMENT = (process.env.NEXT_PUBLIC_BYTECHEF_ENVIRONMEN
 export const BYTECHEF_EXTERNAL_USER_ID = process.env.NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID || "1234567890";
 
 export const BYTECHEF_MCP_SERVER_URL = process.env.NEXT_PUBLIC_BYTECHEF_MCP_SERVER_URL || "";
-
-// Comma-separated ids of connections the embedded workflow builder and Automation Hub may reuse, e.g. "12,34".
-export const BYTECHEF_SHARED_CONNECTION_IDS = (process.env.NEXT_PUBLIC_SHARED_CONNECTION_IDS || "")
-  .split(",")
-  .map((connectionId) => Number(connectionId.trim()))
-  .filter((connectionId) => Number.isInteger(connectionId) && connectionId > 0);

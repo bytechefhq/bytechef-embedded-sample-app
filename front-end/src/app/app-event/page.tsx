@@ -1,5 +1,6 @@
 "use client";
 
+import { PrepareWorkflowCard } from "@/components/playground/prepare-workflow-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -12,8 +13,36 @@ const exampleBody = {
   name: "John Doe"
 };
 
+const exampleBodyJson = JSON.stringify(exampleBody, null, 2);
+
+const sampleWorkflow = {
+  label: "Log App Event",
+  description: "Created from the App Event Playground. Logs every app event it receives.",
+  inputs: [],
+  triggers: [
+    {
+      label: "New Event",
+      name: "trigger_1",
+      type: "appEvent/v1/newEvent",
+      parameters: {},
+    },
+  ],
+  tasks: [
+    {
+      label: "Log event",
+      name: "logger_1",
+      type: "logger/v1/info",
+      parameters: {
+        text: "App event for ${trigger_1.name} (user ${trigger_1.userId})",
+      },
+    },
+  ],
+};
+
+const sampleWorkflowJson = JSON.stringify(sampleWorkflow, null, 2);
+
 export default function AppEventPage() {
-  const [bodyJson, setBodyJson] = useState(JSON.stringify(exampleBody, null, 2));
+  const [bodyJson, setBodyJson] = useState(exampleBodyJson);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,10 +94,55 @@ export default function AppEventPage() {
     <div className="flex w-full flex-col gap-6">
       <h1 className="text-xl font-semibold">App Event Playground</h1>
 
+      <PrepareWorkflowCard
+        description={
+          <>
+            An app event starts every workflow the connected user has enabled whose trigger is{" "}
+            <strong>App Event &rsaquo; New Event</strong>.
+          </>
+        }
+        sampleWorkflowJson={sampleWorkflowJson}
+        steps={
+          <>
+            <li>
+              In ByteChef, open <strong>Embedded &rsaquo; App Events</strong>, click <strong>New App Event</strong>,
+              name it (e.g. <code>user.signed_up</code>) and use the payload from step 2 as its schema.
+            </li>
+
+            <li>
+              Open <strong>Embedded &rsaquo; Integrations</strong>, create a workflow in an integration, open the{" "}
+              <strong>Workflow Code Editor</strong> from the right sidebar, replace the definition with the workflow
+              below and save.
+            </li>
+
+            <li>
+              Select the trigger and choose your event in <strong>App Event Id</strong> on its{" "}
+              <strong>Properties</strong> tab.
+            </li>
+
+            <li>
+              <strong>Publish</strong> the integration, then in <strong>Embedded &rsaquo; Integration Instances</strong>{" "}
+              create an instance configuration for the published version and enable it and the workflow.
+            </li>
+
+            <li>
+              In this app&rsquo;s <strong>Integrations</strong> page, connect the integration and enable the workflow
+              for the demo user. Dispatch skips workflows the user hasn&rsquo;t enabled.
+            </li>
+
+            <li>
+              Dispatch the event in step 2, then open <strong>Embedded &rsaquo; Workflow Executions</strong> to see the
+              run and its log.
+            </li>
+          </>
+        }
+        title="1. Prepare the Workflow in ByteChef"
+      />
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Dispatch App Events</CardTitle>
+            <CardTitle>2. Dispatch App Events</CardTitle>
 
             <CardDescription>
               Calls <code>POST /api/embedded/v1/app-events</code>. The server iterates every

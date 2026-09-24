@@ -36,7 +36,6 @@ does not fit. All of them are read in `src/lib/config.ts`, except `OPENAI_API_KE
 | `NEXT_PUBLIC_BYTECHEF_ENVIRONMENT` | `DEVELOPMENT` | ByteChef environment every call targets: `DEVELOPMENT`, `STAGING` or `PRODUCTION`. Sent as the `X-ENVIRONMENT` header; integrations, connections and workflows are separate per environment. |
 | `NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID` | `1234567890` | Your app's id for the demo user. It becomes the JWT `sub` claim, so ByteChef scopes this user's connections and workflows to it. Change it to simulate a different end user. |
 | `NEXT_PUBLIC_BYTECHEF_MCP_SERVER_URL` | *(empty)* | URL of a ByteChef MCP Server. Only needed for the **Chat MCP** page. |
-| `NEXT_PUBLIC_SHARED_CONNECTION_IDS` | *(empty)* | Comma-separated ids of connections (e.g. `12,34`) that the embedded workflow builder and Automation Hub offer to the user in addition to their own. |
 | `OPENAI_API_KEY` | *(none)* | OpenAI API key for the **Chat MCP** and **Chat Component Kit** pages. |
 
 Example for ByteChef Cloud:

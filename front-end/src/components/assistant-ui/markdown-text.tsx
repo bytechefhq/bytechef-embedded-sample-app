@@ -9,11 +9,66 @@ import {
   useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
 import remarkGfm from "remark-gfm";
-import { type FC, memo, useState } from "react";
-import { CheckIcon, CopyIcon } from "lucide-react";
+import { type FC, type ReactNode, memo, useState } from "react";
+import { CheckIcon, CopyIcon, ExternalLinkIcon } from "lucide-react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const MAX_BARE_URL_LENGTH = 48;
+
+/**
+ * Returns the plain text of a link's children, or undefined when they hold anything but a single string.
+ * A bare URL the model writes out is autolinked by remark-gfm with the URL itself as its only child.
+ */
+const getLinkText = (children: ReactNode): string | undefined => {
+  if (typeof children === "string") {
+    return children;
+  }
+
+  if (
+    Array.isArray(children) &&
+    children.length === 1 &&
+    typeof children[0] === "string"
+  ) {
+    return children[0];
+  }
+
+  return undefined;
+};
+
+/**
+ * The ByteChef connect page an MCP tool returns as `setupUrl` when the integration it needs is not connected.
+ */
+const isConnectPageUrl = (href: string): boolean => {
+  try {
+    return new URL(href).pathname.endsWith("/connect.html");
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Shows a long bare URL as host and path, cut to a readable length; the query string, which carries tokens,
+ * never fits on screen anyway.
+ */
+const shortenUrl = (href: string): string => {
+  if (href.length <= MAX_BARE_URL_LENGTH) {
+    return href;
+  }
+
+  try {
+    const url = new URL(href);
+    const shortText = url.host + (url.pathname === "/" ? "" : url.pathname);
+
+    return shortText.length > MAX_BARE_URL_LENGTH
+      ? `${shortText.slice(0, MAX_BARE_URL_LENGTH - 1)}…`
+      : shortText;
+  } catch {
+    return href;
+  }
+};
 
 const MarkdownTextImpl = () => {
   return (
@@ -140,8 +195,47 @@ const defaultComponents = memoizeMarkdownComponents({
       {...props}
     />
   ),
-  a: ({ className, href, ...props }) => {
+  a: ({ children, className, href, ...props }) => {
     const isExternal = typeof href === "string" && /^https?:\/\//i.test(href);
+    const linkText = getLinkText(children);
+    const isBareUrl = linkText !== undefined && linkText === href;
+
+    if (isExternal && isConnectPageUrl(href)) {
+      return (
+        <a
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "aui-md-connect-link my-1 no-underline",
+            className,
+          )}
+          href={href}
+          rel="noopener noreferrer"
+          target="_blank"
+          {...props}
+        >
+          {isBareUrl ? "Connect account" : children}
+          <ExternalLinkIcon data-icon="inline-end" />
+        </a>
+      );
+    }
+
+    if (isExternal && isBareUrl) {
+      return (
+        <a
+          className={cn(
+            "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
+            className,
+          )}
+          href={href}
+          rel="noopener noreferrer"
+          target="_blank"
+          title={href}
+          {...props}
+        >
+          {shortenUrl(href)}
+        </a>
+      );
+    }
 
     return (
       <a
@@ -152,7 +246,9 @@ const defaultComponents = memoizeMarkdownComponents({
         href={href}
         {...(isExternal ? { rel: "noopener noreferrer", target: "_blank" } : {})}
         {...props}
-      />
+      >
+        {children}
+      </a>
     );
   },
   blockquote: ({ className, ...props }) => (

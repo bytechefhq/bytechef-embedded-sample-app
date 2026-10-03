@@ -1,10 +1,11 @@
 "use client";
 
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   AlertCircleIcon,
   CheckIcon,
   ChevronDownIcon,
+  ExternalLinkIcon,
   LoaderIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -23,7 +24,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { findSetupUrl, unwrapToolResult } from "@/lib/tool-result";
 
 const ANIMATION_DURATION = 200;
 
@@ -300,6 +302,38 @@ function ToolFallbackError({
   );
 }
 
+function ToolFallbackConnectLink({
+  setupUrl,
+  className,
+  ...props
+}: React.ComponentProps<"div"> & {
+  setupUrl: string;
+}) {
+  return (
+    <div
+      data-slot="tool-fallback-connect-link"
+      className={cn(
+        "aui-tool-fallback-connect-link flex flex-wrap items-center gap-3 ps-6 pb-2 text-sm",
+        className,
+      )}
+      {...props}
+    >
+      <span className="text-muted-foreground">
+        This tool needs your account to be connected first.
+      </span>
+      <a
+        className={buttonVariants({ size: "sm" })}
+        href={setupUrl}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        Connect account
+        <ExternalLinkIcon data-icon="inline-end" />
+      </a>
+    </div>
+  );
+}
+
 const APPROVED_RESULT = "Approved by user";
 const DENIED_RESULT = "User denied tool execution";
 
@@ -519,6 +553,9 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
     status?.type === "incomplete" && status.reason === "cancelled";
   const isRequiresAction = status?.type === "requires-action";
 
+  const payload = useMemo(() => unwrapToolResult(result), [result]);
+  const setupUrl = findSetupUrl(payload);
+
   const [open, setOpen] = useState(isRequiresAction);
   const [prevRequiresAction, setPrevRequiresAction] =
     useState(isRequiresAction);
@@ -545,8 +582,9 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({
             respondToApproval={respondToApproval}
           />
         )}
-        {!isCancelled && <ToolFallbackResult result={result} />}
+        {!isCancelled && <ToolFallbackResult result={payload} />}
       </ToolFallbackContent>
+      {!isCancelled && setupUrl && <ToolFallbackConnectLink setupUrl={setupUrl} />}
     </ToolFallbackRoot>
   );
 };
@@ -561,6 +599,7 @@ const ToolFallback = memo(
   Result: typeof ToolFallbackResult;
   Error: typeof ToolFallbackError;
   Approval: typeof ToolFallbackApproval;
+  ConnectLink: typeof ToolFallbackConnectLink;
 };
 
 ToolFallback.displayName = "ToolFallback";
@@ -571,6 +610,7 @@ ToolFallback.Args = ToolFallbackArgs;
 ToolFallback.Result = ToolFallbackResult;
 ToolFallback.Error = ToolFallbackError;
 ToolFallback.Approval = ToolFallbackApproval;
+ToolFallback.ConnectLink = ToolFallbackConnectLink;
 
 export {
   ToolFallback,
@@ -581,4 +621,5 @@ export {
   ToolFallbackResult,
   ToolFallbackError,
   ToolFallbackApproval,
+  ToolFallbackConnectLink,
 };

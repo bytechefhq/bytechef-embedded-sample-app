@@ -78,6 +78,7 @@ export default function AutomationWorkflowPage() {
   const [automationsLoading, setAutomationsLoading] = useState(false);
   const [connectionsJson, setConnectionsJson] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [inputsJson, setInputsJson] = useState("");
   const [pendingAction, setPendingAction] = useState<ActionType | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [runBodyJson, setRunBodyJson] = useState(JSON.stringify(exampleRunBody, null, 2));
@@ -133,11 +134,12 @@ export default function AutomationWorkflowPage() {
 
       if (action === "provision") {
         const connections = connectionsJson.trim() ? JSON.parse(connectionsJson) : undefined;
+        const inputs = inputsJson.trim() ? JSON.parse(inputsJson) : undefined;
 
         response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: connections ? JSON.stringify({ connections }) : undefined,
+          body: connections || inputs ? JSON.stringify({ connections, inputs }) : undefined,
         });
       } else if (action === "deprovision") {
         response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, { method: "DELETE" });
@@ -223,8 +225,9 @@ export default function AutomationWorkflowPage() {
 
             <CardDescription>
               Provisioning calls <code>POST /api/embedded/v1/automation/workflow-templates/{`{workflowUuid}`}/provision</code>{" "}
-              as the connected user, wiring connections by component. Enable it before running it; running calls the
-              workflow&rsquo;s request trigger by the same UUID.
+              as the connected user, wiring connections by component and storing the workflow inputs you pass, so a
+              workflow whose required inputs are all given comes out enabled. Otherwise enable it before running it;
+              running calls the workflow&rsquo;s request trigger by the same UUID.
             </CardDescription>
           </CardHeader>
 
@@ -250,6 +253,19 @@ export default function AutomationWorkflowPage() {
                 placeholder='{"slack": 12}'
                 rows={3}
                 value={connectionsJson}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="inputsJson">Inputs (JSON, optional)</Label>
+
+              <Textarea
+                className="font-mono text-sm"
+                id="inputsJson"
+                onChange={(event) => setInputsJson(event.target.value)}
+                placeholder='{"channel": "#alerts"}'
+                rows={3}
+                value={inputsJson}
               />
             </div>
 

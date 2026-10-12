@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import {
   CalendarIcon,
   ChartPieIcon,
+  CodeXmlIcon,
   FileCodeIcon,
   FilesIcon,
   FoldersIcon,
@@ -40,6 +41,7 @@ const navigation = [
   { name: 'Request Playground', href: '/request', icon: WebhookIcon },
   { name: 'Automation Playground', href: '/automation-workflow', icon: PackagePlusIcon },
   { name: 'Automation Code Playground', href: '/automation-code-playground', icon: FileCodeIcon },
+  { name: 'Integration Code Playground', href: '/integration-code-playground', icon: CodeXmlIcon },
   { name: 'ComponentKit Chat', href: '/chat-component-kit', icon: MessageCircleIcon },
   { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },
   { name: 'Automations', href: '/automations', icon: WorkflowIcon },

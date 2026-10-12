@@ -27,7 +27,8 @@ This is a Next.js application that uses integrations and embeds the ByteChef wor
 ## Configuration
 
 Create a `.env.local` file in `front-end/` (it is gitignored). Every variable is optional; set only the ones whose default
-does not fit. All of them are read in `src/lib/config.ts`, except `OPENAI_API_KEY`.
+does not fit. The `NEXT_PUBLIC_*` variables are read in `src/lib/config.ts`, `BYTECHEF_PLATFORM_API_KEY` in
+`src/lib/server-config.ts`; `OPENAI_API_KEY` is read where it is used.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -37,6 +38,7 @@ does not fit. All of them are read in `src/lib/config.ts`, except `OPENAI_API_KE
 | `NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID` | `1234567890` | Your app's id for the demo user. It becomes the JWT `sub` claim, so ByteChef scopes this user's connections and workflows to it. Change it to simulate a different end user. |
 | `NEXT_PUBLIC_BYTECHEF_MCP_SERVER_URL` | *(empty)* | URL of a ByteChef MCP Server. Only needed for the **Chat MCP** page. |
 | `OPENAI_API_KEY` | *(none)* | OpenAI API key for the **Chat MCP** and **Chat Component Kit** pages. |
+| `BYTECHEF_PLATFORM_API_KEY` | *(none)* | Embedded API key of a ByteChef administrator, used server-side only by the **Automation Code Playground** and **Integration Code Playground** pages to deploy code workflows. See [Code playgrounds](#code-playgrounds). Never prefix it with `NEXT_PUBLIC_`. |
 
 Example for ByteChef Cloud:
 
@@ -46,6 +48,32 @@ NEXT_PUBLIC_BYTECHEF_ENVIRONMENT=DEVELOPMENT
 ```
 
 Restart `npm run dev` after changing `.env.local`: `NEXT_PUBLIC_*` values are inlined when Next.js compiles the app.
+
+### Code playgrounds
+
+The **Automation Code Playground** and **Integration Code Playground** pages deploy a JavaScript code workflow you edit in
+the page, then let you run it (a catalog code project, provisioned as a reference for the demo user) or connect it (a
+code integration). Deploying is an administrator operation, so these pages call
+`POST /api/embedded/v1/automation-project-code-workflows/deploy` and
+`POST /api/embedded/v1/integration-code-workflows/deploy?enable=true` from Next.js route handlers
+(`src/app/api/code-playground/`) with a platform API key instead of the connected-user JWT. The key stays on the
+server; without it both pages show these setup steps instead of the editor.
+
+1. Sign in to ByteChef as an administrator and switch to the environment set in `NEXT_PUBLIC_BYTECHEF_ENVIRONMENT`
+   (an API key belongs to the environment it was created in).
+2. Open **Embedded › Settings › API Keys** (`/embedded/settings/api-keys`) and create a key. It is an Embedded API key
+   owned by your user, so it carries your administrator role. An organization key from **Settings › Organization ›
+   Admin API Keys** does not work: the deploy endpoints reject it with `401`.
+3. Add it to `.env.local` and restart the front-end:
+
+   ```bash
+   BYTECHEF_PLATFORM_API_KEY=<your API key>
+   ```
+
+A code integration is keyed by its component, so deploying the Integration Code Playground's starter (built on
+`httpClient`) and the standalone `bytechef-embedded-integration-sample-code-workflow-javascript` sample update the same
+integration. Deploying with `enable=true` fails with a message when the component needs OAuth app credentials that an
+administrator has to configure in ByteChef first.
 
 ## Running the Frontend
 

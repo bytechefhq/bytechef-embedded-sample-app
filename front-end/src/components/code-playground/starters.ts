@@ -13,7 +13,8 @@ export const automationStarterSource = `({
             description: "Answers a request with a greeting.",
             // A catalog workflow is only reachable through the embedded public endpoints when it declares a
             // request trigger or an app-event trigger. Without one the import still succeeds, with a warning.
-            triggers: [{name: "request", type: "request/v1/autoRespondWithHTTP200"}],
+            // awaitWorkflowAndRespond makes Run return the workflow outputs instead of an empty 200.
+            triggers: [{name: "request", type: "request/v1/awaitWorkflowAndRespond"}],
             outputs: [{name: "greeting", task: "greet"}],
             tasks: [
                 {

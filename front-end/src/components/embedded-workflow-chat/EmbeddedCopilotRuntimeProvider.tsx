@@ -184,6 +184,8 @@ export function EmbeddedCopilotRuntimeProvider({
                 : {mode: 'BUILD', workflowUuid}
         );
 
+        let textMessageHasBubble = false;
+
         const subscriber: AgentSubscriber = {
             onRunErrorEvent: ({event}) => {
                 const rawMessage = typeof event?.message === 'string' ? event.message.trim() : '';
@@ -198,16 +200,23 @@ export function EmbeddedCopilotRuntimeProvider({
                 onRunFinished?.();
             },
             onTextMessageStartEvent: () => {
-                // Each text message from the agent starts a fresh bubble so post-tool-call text
-                // doesn't overwrite the pre-tool-call text (appendToLastAssistantMessage skips
-                // array-content messages and would land on the wrong bubble otherwise).
-                addMessage({content: '', role: 'assistant'});
+                textMessageHasBubble = false;
             },
             onTextMessageContentEvent: ({event, textMessageBuffer}) => {
-                appendToLastAssistantMessage(textMessageBuffer + event.delta);
+                const text = textMessageBuffer + event.delta;
+
+                if (textMessageHasBubble) {
+                    appendToLastAssistantMessage(text);
+                } else {
+                    textMessageHasBubble = true;
+
+                    addMessage({content: text, role: 'assistant'});
+                }
             },
             onTextMessageEndEvent: ({textMessageBuffer}) => {
-                appendToLastAssistantMessage(textMessageBuffer);
+                if (textMessageHasBubble) {
+                    appendToLastAssistantMessage(textMessageBuffer);
+                }
             },
             onToolCallStartEvent: ({event}) => {
                 addToolCallPart({

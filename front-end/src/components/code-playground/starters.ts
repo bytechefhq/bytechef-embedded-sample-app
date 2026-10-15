@@ -62,8 +62,9 @@ export const automationStarterSource = `({
                 {
                     name: "fetchEmails",
                     label: "Fetch Emails",
-                    // A task names the connections it uses. Provisioning binds each one to a connection of the
-                    // connected user on the same component.
+                    // A code task's perform calls actions itself, so it declares the connections it uses; the name is
+                    // what perform passes to the action. Provisioning binds each one to a connection of the connected
+                    // user on the same component.
                     connections: [{componentName: "googleMail", name: "gmail"}],
                     perform: function (context) {
                         const request = context.input()["request"] || {};
@@ -130,9 +131,10 @@ export const integrationStarterSource = `({
                     name: "fetchEmails",
                     label: "Fetch Emails",
                     description: "Searches the inbox with the Gmail Search Email action.",
-                    // A task names the connections it uses. One on the integration's own component is the
-                    // connected user's integration connection; one on any other component is wired by an
-                    // administrator in the instance configuration.
+                    // A code task's perform calls actions itself, so it declares the connections it uses; the name is
+                    // what perform passes to the action. One on the integration's own component is the connected user's
+                    // integration connection; one on any other component is wired by an administrator in the instance
+                    // configuration.
                     connections: [{componentName: "googleMail", name: "gmail"}],
                     perform: function (context) {
                         const request = context.input()["request"] || {};

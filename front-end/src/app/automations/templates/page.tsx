@@ -2,10 +2,43 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useActivationDialog } from "@bytechef/embedded";
 import { ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AutomationWorkflowProject, copyWorkflowTemplate, fetchAutomationWorkflowProjects } from "@/lib/api";
+import { AutomationWorkflowProject, copyWorkflowTemplate, fetchAutomationWorkflowProjects, getToken } from "@/lib/api";
+import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
+
+function ActivationDialogOpener({
+  jwtToken,
+  onDone,
+  router,
+  workflowTemplateId,
+}: {
+  jwtToken: string;
+  onDone: () => void;
+  router: ReturnType<typeof useRouter>;
+  workflowTemplateId: string;
+}) {
+  const { openDialog, closeDialog } = useActivationDialog({
+    baseUrl: BYTECHEF_APP_BASE_URL,
+    environment: BYTECHEF_ENVIRONMENT,
+    jwtToken,
+    onActivated: () => router.push("/automations"),
+    onClose: onDone,
+    onEditWorkflow: (workflowUuid) => router.push(`/automations/${workflowUuid}`),
+    workflowTemplateId,
+  });
+
+  useEffect(() => {
+    openDialog();
+
+    return () => closeDialog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
+}
 
 export default function WorkflowTemplatesPage() {
   const router = useRouter();
@@ -14,8 +47,14 @@ export default function WorkflowTemplatesPage() {
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creatingWorkflowId, setCreatingWorkflowId] = useState<string | null>(null);
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
+  const [activatingTemplateId, setActivatingTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
+    getToken()
+      .then(setJwtToken)
+      .catch(() => setJwtToken(null));
+
     fetchAutomationWorkflowProjects()
       .then((data) => {
         setProjects(data);
@@ -117,6 +156,19 @@ export default function WorkflowTemplatesPage() {
                               ))}
                             </div>
                           )}
+
+                          <div className="pt-3">
+                            <Button
+                              size="sm"
+                              disabled={!jwtToken}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setActivatingTemplateId(workflowTemplate.id);
+                              }}
+                            >
+                              Activate
+                            </Button>
+                          </div>
                         </CardHeader>
                       </Card>
                     ))}
@@ -131,6 +183,16 @@ export default function WorkflowTemplatesPage() {
           <div className="text-center py-12 bg-secondary rounded-md border border-border">
             <p className="text-muted-foreground">No workflow templates available.</p>
           </div>
+        )}
+
+        {activatingTemplateId && jwtToken && (
+          <ActivationDialogOpener
+            key={activatingTemplateId}
+            jwtToken={jwtToken}
+            onDone={() => setActivatingTemplateId(null)}
+            router={router}
+            workflowTemplateId={activatingTemplateId}
+          />
         )}
       </div>
     </div>

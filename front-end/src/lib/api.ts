@@ -47,6 +47,8 @@ export interface AutomationWorkflowProjectComponent {
   name: string;
   title: string;
   icon: string;
+  connectionRequired?: boolean;
+  integrationId?: number | null;
 }
 
 export interface AutomationWorkflowProjectWorkflowTemplate {

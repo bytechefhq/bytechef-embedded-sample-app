@@ -79,6 +79,11 @@ integration next to it, and the playground picks the one whose description match
 `enable=true` fails with a message when the component needs OAuth app credentials that an administrator has to
 configure in ByteChef first - for Gmail, enter the Gmail OAuth app in the integration's instance configuration.
 
+**Activate a template in place.** Each card on `/automations/templates` has an **Activate** button that opens the SDK's
+`useActivationDialog`: connect the accounts the template needs (through the regular connect dialog, against the
+integration that backs each component — so the integration must exist with an enabled configuration in this
+environment), fill its inputs, and activate. "Edit workflow" copies the template and opens it on `/automations/{uuid}`.
+
 ## Running the Frontend
 
 1. For development (with hot reloading):

@@ -123,9 +123,9 @@ export default function WorkflowTemplatesPage() {
                   role="button"
                   aria-disabled={creatingWorkflowId !== null}
                   onClick={() => creatingWorkflowId === null && handleSelectWorkflowTemplate(workflowTemplate.id)}
-                  className="cursor-pointer transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+                  className="flex h-full cursor-pointer flex-col transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
                 >
-                  <CardHeader>
+                  <CardHeader className="flex flex-1 flex-col">
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{project.name}</p>
 
                     <CardTitle className="text-base">{workflowTemplate.label}</CardTitle>
@@ -156,7 +156,7 @@ export default function WorkflowTemplatesPage() {
                       </div>
                     )}
 
-                    <div className="pt-3">
+                    <div className="mt-auto pt-3">
                       <Button
                         size="sm"
                         disabled={!jwtToken}

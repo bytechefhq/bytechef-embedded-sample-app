@@ -52,8 +52,10 @@ Restart `npm run dev` after changing `.env.local`: `NEXT_PUBLIC_*` values are in
 ### Code playgrounds
 
 The **Automation Code Playground** and **Integration Code Playground** pages deploy a JavaScript code workflow you edit in
-the page, then let you run it (a catalog code project, provisioned as a reference for the demo user) or connect it (a
-code integration). Deploying is an administrator operation, so these pages call
+the page, then let you run it - a catalog code project is provisioned as a reference for the demo user, a code
+integration is connected and has its workflow enabled on the demo user's integration instance. Both starters include a
+workflow started by the Gmail **New Email** trigger and one that calls the Gmail **Search Email** action through a
+declared connection, so connect a Gmail account first. Deploying is an administrator operation, so these pages call
 `POST /api/embedded/v1/automation-project-code-workflows/deploy` and
 `POST /api/embedded/v1/integration-code-workflows/deploy?enable=true` from Next.js route handlers
 (`src/app/api/code-playground/`) with a platform API key instead of the connected-user JWT. The key stays on the
@@ -71,9 +73,11 @@ server; without it both pages show these setup steps instead of the editor.
    ```
 
 A code integration is keyed by its component, so deploying the Integration Code Playground's starter (built on
-`httpClient`) and the standalone `bytechef-embedded-integration-sample-code-workflow-javascript` sample update the same
-integration. Deploying with `enable=true` fails with a message when the component needs OAuth app credentials that an
-administrator has to configure in ByteChef first.
+`googleMail`) and the standalone `bytechef-embedded-integration-sample-code-workflow-javascript` sample update the same
+code integration. A visual Gmail integration you already have is left alone: the deploy creates a separate code
+integration next to it, and the playground picks the one whose description matches the source. Deploying with
+`enable=true` fails with a message when the component needs OAuth app credentials that an administrator has to
+configure in ByteChef first - for Gmail, enter the Gmail OAuth app in the integration's instance configuration.
 
 ## Running the Frontend
 

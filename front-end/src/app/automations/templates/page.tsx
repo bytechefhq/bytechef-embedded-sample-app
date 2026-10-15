@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useActivationDialog } from "@bytechef/embedded";
 import { ArrowLeftIcon } from "lucide-react";
@@ -20,7 +20,11 @@ function ActivationDialogOpener({
   router: ReturnType<typeof useRouter>;
   workflowTemplateId: string;
 }) {
-  const { openDialog, closeDialog } = useActivationDialog({
+  // StrictMode mounts effects twice; open once, and let the hook tear the dialog down on unmount. Calling
+  // closeDialog in a cleanup would fire onClose → onDone and unmount this opener before the dialog shows.
+  const openedRef = useRef(false);
+
+  const { openDialog } = useActivationDialog({
     baseUrl: BYTECHEF_APP_BASE_URL,
     environment: BYTECHEF_ENVIRONMENT,
     jwtToken,
@@ -31,9 +35,13 @@ function ActivationDialogOpener({
   });
 
   useEffect(() => {
-    openDialog();
+    if (openedRef.current) {
+      return;
+    }
 
-    return () => closeDialog();
+    openedRef.current = true;
+
+    openDialog();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -84,7 +92,7 @@ export default function WorkflowTemplatesPage() {
 
   return (
     <div className="flex justify-center w-full">
-      <div className="flex flex-col gap-4 w-full max-w-5xl">
+      <div className="flex flex-col gap-4 w-full">
         <div className="w-full flex items-center gap-3">
           <Button
             variant="ghost"
@@ -107,77 +115,63 @@ export default function WorkflowTemplatesPage() {
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground">Loading...</div>
         ) : hasWorkflowTemplates ? (
-          <div className="flex flex-col gap-8">
-            {projects!.map((project) => (
-              <section key={project.id}>
-                <div className="mb-3">
-                  <h2 className="text-lg font-semibold">{project.name}</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {projects!.flatMap((project) =>
+              project.workflowTemplates.map((workflowTemplate) => (
+                <Card
+                  key={workflowTemplate.id}
+                  role="button"
+                  aria-disabled={creatingWorkflowId !== null}
+                  onClick={() => creatingWorkflowId === null && handleSelectWorkflowTemplate(workflowTemplate.id)}
+                  className="cursor-pointer transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+                >
+                  <CardHeader>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{project.name}</p>
 
-                  {project.description && (
-                    <p className="text-sm text-muted-foreground">{project.description}</p>
-                  )}
-                </div>
+                    <CardTitle className="text-base">{workflowTemplate.label}</CardTitle>
 
-                {project.workflowTemplates.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {project.workflowTemplates.map((workflowTemplate) => (
-                      <Card
-                        key={workflowTemplate.id}
-                        role="button"
-                        aria-disabled={creatingWorkflowId !== null}
-                        onClick={() => creatingWorkflowId === null && handleSelectWorkflowTemplate(workflowTemplate.id)}
-                        className="cursor-pointer transition-colors hover:bg-muted/40 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+                    <CardDescription>
+                      {creatingWorkflowId === workflowTemplate.id
+                        ? "Creating workflow..."
+                        : workflowTemplate.description || "No description provided"}
+                    </CardDescription>
+
+                    {workflowTemplate.components.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
+                        {workflowTemplate.components.map((component) => (
+                          <span
+                            key={component.name}
+                            title={component.title || component.name}
+                            className="flex size-9 items-center justify-center rounded-full border border-border bg-background p-1.5"
+                          >
+                            {component.icon && (
+                              <img
+                                src={`data:image/svg+xml;utf8,${encodeURIComponent(component.icon)}`}
+                                alt={component.title || component.name}
+                                className="size-full"
+                              />
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="pt-3">
+                      <Button
+                        size="sm"
+                        disabled={!jwtToken}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setActivatingTemplateId(workflowTemplate.id);
+                        }}
                       >
-                        <CardHeader>
-                          <CardTitle className="text-base">{workflowTemplate.label}</CardTitle>
-
-                          <CardDescription>
-                            {creatingWorkflowId === workflowTemplate.id
-                              ? "Creating workflow..."
-                              : workflowTemplate.description || "No description provided"}
-                          </CardDescription>
-
-                          {workflowTemplate.components.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-2 pt-2">
-                              {workflowTemplate.components.map((component) => (
-                                <span
-                                  key={component.name}
-                                  title={component.title || component.name}
-                                  className="flex size-9 items-center justify-center rounded-full border border-border bg-background p-1.5"
-                                >
-                                  {component.icon && (
-                                    <img
-                                      src={`data:image/svg+xml;utf8,${encodeURIComponent(component.icon)}`}
-                                      alt={component.title || component.name}
-                                      className="size-full"
-                                    />
-                                  )}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="pt-3">
-                            <Button
-                              size="sm"
-                              disabled={!jwtToken}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setActivatingTemplateId(workflowTemplate.id);
-                              }}
-                            >
-                              Activate
-                            </Button>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">No workflow templates available in this project.</p>
-                )}
-              </section>
-            ))}
+                        Activate
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))
+            )}
           </div>
         ) : (
           <div className="text-center py-12 bg-secondary rounded-md border border-border">

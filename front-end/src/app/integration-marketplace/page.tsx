@@ -18,7 +18,7 @@ export default function IntegrationMarketplacePage() {
 
   return (
     <div className="absolute inset-0 flex flex-col bg-muted lg:pl-72">
-      <header className="p-4">
+      <header className="px-4 pt-4">
         <h1 className="text-xl font-semibold">Integration Marketplace</h1>
       </header>
 

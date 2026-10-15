@@ -13,7 +13,7 @@ import { Loader2Icon, RefreshCwIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const exampleRunBody = {
-  name: "Ada",
+  maxResults: 5,
 };
 
 interface CatalogProjectI {

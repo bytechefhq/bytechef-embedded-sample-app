@@ -1,4 +1,4 @@
-// Starter sources for the code playgrounds, copied from the bytechef-embedded-automation-sample-code-workflow-javascript
+// Starter sources for the code playgrounds, adapted from the bytechef-embedded-automation-sample-code-workflow-javascript
 // and bytechef-embedded-integration-sample-code-workflow-javascript samples. The project name and descriptions are
 // changed so a playground deploy does not overwrite a project deployed from the standalone sample.
 
@@ -27,6 +27,58 @@ export const automationStarterSource = `({
                     }
                 }
             ]
+        },
+        {
+            name: "summarizeNewEmail",
+            label: "Summarize New Email",
+            description: "Runs for every new email in the connected user's inbox and logs who sent it.",
+            // Provisioning binds the Gmail trigger to one of the connected user's Gmail connections - connect the
+            // Gmail integration first. It has no request trigger, so the deploy warns about it and Run cannot call it:
+            // once provisioned and enabled it runs whenever an email arrives.
+            triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
+            outputs: [{name: "summary", task: "summarize"}],
+            tasks: [
+                {
+                    name: "summarize",
+                    label: "Summarize",
+                    perform: function (context) {
+                        const email = context.input("newEmail");
+
+                        const summary = "New email from " + email.from + ": " + email.subject;
+
+                        context.log("info", summary);
+
+                        return summary;
+                    }
+                }
+            ]
+        },
+        {
+            name: "fetchRecentEmails",
+            label: "Fetch Recent Emails",
+            description: "Returns the connected user's most recent emails, optionally only those from one sender.",
+            triggers: [{name: "request", type: "request/v1/awaitWorkflowAndRespond"}],
+            outputs: [{name: "emails", task: "fetchEmails"}],
+            tasks: [
+                {
+                    name: "fetchEmails",
+                    label: "Fetch Emails",
+                    // A task names the connections it uses. Provisioning binds each one to a connection of the
+                    // connected user on the same component.
+                    connections: [{componentName: "googleMail", name: "gmail"}],
+                    perform: function (context) {
+                        const request = context.input()["request"] || {};
+                        const body = request.body || {};
+
+                        const result = context.component.googleMail.searchEmail(
+                            {from: body.from, maxResults: body.maxResults || 10}, "gmail");
+
+                        context.log("info", "Found " + (result.messages || []).length + " emails");
+
+                        return result.messages || [];
+                    }
+                }
+            ]
         }
     ]
 })
@@ -35,26 +87,64 @@ export const automationStarterSource = `({
 export const automationStarterFileName = "playground_catalog_greeting";
 
 // A code integration is keyed by its component, so a playground deploy and a deploy of the standalone sample
-// (both on httpClient) update the same integration.
+// (both on googleMail) update the same integration.
 export const integrationStarterSource = `({
-    componentName: "httpClient",
+    componentName: "googleMail",
     componentVersion: 1,
     version: "0.0.1",
     description: "A code integration deployed from the Integration Code Playground.",
     workflows: [
         {
-            name: "playgroundEchoMessage",
-            label: "Playground Echo Message",
-            description: "Returns the message it was given, upper-cased.",
-            inputs: [{name: "message", label: "Message", type: "STRING", required: true}],
-            outputs: [{name: "result", task: "shout"}],
+            name: "summarizeNewEmail",
+            label: "Summarize New Email",
+            description: "Runs for every new email in the connected user's inbox and logs who sent it.",
+            // A Gmail trigger on a Gmail integration runs on the connection the connected user created when they
+            // connected the integration - nothing to declare. It needs no call: once enabled it runs on its own.
+            triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
+            outputs: [{name: "summary", task: "summarize"}],
             tasks: [
                 {
-                    name: "shout",
-                    label: "Shout",
-                    description: "Upper-cases the message.",
+                    name: "summarize",
+                    label: "Summarize",
+                    description: "Builds a one-line summary of the new email.",
                     perform: function (context) {
-                        return String(context.input("message")).toUpperCase();
+                        const email = context.input("newEmail");
+
+                        const summary = "New email from " + email.from + ": " + email.subject;
+
+                        context.log("info", summary);
+
+                        return summary;
+                    }
+                }
+            ]
+        },
+        {
+            name: "fetchRecentEmails",
+            label: "Fetch Recent Emails",
+            description: "Returns the connected user's most recent emails, optionally only those from one sender.",
+            // awaitWorkflowAndRespond makes Run return the workflow outputs.
+            triggers: [{name: "request", type: "request/v1/awaitWorkflowAndRespond"}],
+            outputs: [{name: "emails", task: "fetchEmails"}],
+            tasks: [
+                {
+                    name: "fetchEmails",
+                    label: "Fetch Emails",
+                    description: "Searches the inbox with the Gmail Search Email action.",
+                    // A task names the connections it uses. One on the integration's own component is the
+                    // connected user's integration connection; one on any other component is wired by an
+                    // administrator in the instance configuration.
+                    connections: [{componentName: "googleMail", name: "gmail"}],
+                    perform: function (context) {
+                        const request = context.input()["request"] || {};
+                        const body = request.body || {};
+
+                        const result = context.component.googleMail.searchEmail(
+                            {from: body.from, maxResults: body.maxResults || 10}, "gmail");
+
+                        context.log("info", "Found " + (result.messages || []).length + " emails");
+
+                        return result.messages || [];
                     }
                 }
             ]

@@ -21,6 +21,13 @@ export const createSkeletonWorkflow = async ({
         method: 'POST',
     });
 
+    if (response.status === 401 || response.status === 403) {
+        throw new Error(
+            `ByteChef rejected the chat's token for the ${environment} environment. Check that the token is valid ` +
+                "and was signed for the same environment as the component's environment prop."
+        );
+    }
+
     if (!response.ok) {
         throw new Error(`Failed to create workflow: ${response.status}`);
     }

@@ -11,8 +11,7 @@ export const automationStarterSource = `({
             name: "greetOnRequest",
             label: "Greet on Request",
             description: "Answers a request with a greeting.",
-            // A catalog workflow is only reachable through the embedded public endpoints when it declares a
-            // request trigger or an app-event trigger. Without one the import still succeeds, with a warning.
+            // A request trigger makes the workflow callable through the embedded public endpoints.
             // awaitWorkflowAndRespond makes Run return the workflow outputs instead of an empty 200.
             triggers: [{name: "request", type: "request/v1/awaitWorkflowAndRespond"}],
             outputs: [{name: "greeting", task: "greet"}],
@@ -33,8 +32,8 @@ export const automationStarterSource = `({
             label: "Summarize New Email",
             description: "Runs for every new email in the connected user's inbox and logs who sent it.",
             // Provisioning binds the Gmail trigger to one of the connected user's Gmail connections - connect the
-            // Gmail integration first. It has no request trigger, so the deploy warns about it and Run cannot call it:
-            // once provisioned and enabled it runs whenever an email arrives.
+            // Gmail integration first. It has no request trigger, so Run cannot call it: once provisioned and enabled
+            // it runs whenever an email arrives.
             triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
             outputs: [{name: "summary", task: "summarize"}],
             tasks: [

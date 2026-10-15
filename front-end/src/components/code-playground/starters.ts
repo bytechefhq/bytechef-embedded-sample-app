@@ -131,17 +131,14 @@ export const integrationStarterSource = `({
                     name: "fetchEmails",
                     label: "Fetch Emails",
                     description: "Searches the inbox with the Gmail Search Email action.",
-                    // A code task's perform calls actions itself, so it declares the connections it uses; the name is
-                    // what perform passes to the action. One on the integration's own component is the connected user's
-                    // integration connection; one on any other component is wired by an administrator in the instance
-                    // configuration.
-                    connections: [{componentName: "googleMail", name: "gmail"}],
+                    // A call to the integration's own component needs no declared connection: it runs on the connected
+                    // user's integration connection. Declare and name only connections to other components.
                     perform: function (context) {
                         const request = context.input()["request"] || {};
                         const body = request.body || {};
 
                         const result = context.component.googleMail.searchEmail(
-                            {from: body.from, maxResults: body.maxResults || 10}, "gmail");
+                            {from: body.from, maxResults: body.maxResults || 10});
 
                         context.log("info", "Found " + (result.messages || []).length + " emails");
 

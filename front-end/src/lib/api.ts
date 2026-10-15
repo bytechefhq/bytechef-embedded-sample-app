@@ -30,6 +30,9 @@ export interface Workflow {
   createdDate?: string;
   description: string;
   enabled: boolean;
+  // REFERENCE: an activated catalog template (it follows the template and has no version of its own);
+  // COPY: the user's own workflow, copied from a template or created blank.
+  kind?: 'COPY' | 'REFERENCE';
   label: string;
   lastModifiedDate?: string;
   name: string;
@@ -105,6 +108,16 @@ export async function enableWorkflow(workflowUuid: string, enable: boolean): Pro
  * @param workflowUuid The uuid of the workflow
  * @returns Promise that resolves to the fetch response
  */
+/**
+ * Remove an activated template (a reference) for the current user
+ * @param workflowUuid The uuid of the activated template
+ */
+export async function deprovisionWorkflowReference(workflowUuid: string): Promise<Response> {
+  return fetchWithAuth(`/api/embedded/v1/automation/workflow-templates/${workflowUuid}/provision`, {
+    method: 'DELETE'
+  });
+}
+
 export async function deleteWorkflow(workflowUuid: string): Promise<Response> {
   return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowUuid}`, {
     method: 'DELETE'

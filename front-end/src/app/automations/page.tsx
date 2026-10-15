@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Switch} from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { fetchWorkflows, enableWorkflow, deleteWorkflow, Workflow } from "@/lib/api";
+import { fetchWorkflows, enableWorkflow, deleteWorkflow, deprovisionWorkflowReference, Workflow } from "@/lib/api";
 
 export default function AutomationsPage() {
   const [workflows, setWorkflows] = useState<Workflow[] | undefined>();
@@ -52,13 +52,15 @@ export default function AutomationsPage() {
       });
   };
 
-  const handleDeleteWorkflow = (workflowUuid: string) => {
+  const handleDeleteWorkflow = (workflow: Workflow) => {
+    const workflowUuid = workflow.workflowUuid!;
+
     if (!confirm("Are you sure you want to delete this workflow? This action cannot be undone.")) {
       return;
     }
 
     setLoading(true);
-    deleteWorkflow(workflowUuid)
+    (workflow.kind === 'REFERENCE' ? deprovisionWorkflowReference(workflowUuid) : deleteWorkflow(workflowUuid))
       .then((res) => {
         if (res.ok) {
           setSuccess("Workflow deleted successfully!");
@@ -177,13 +179,22 @@ export default function AutomationsPage() {
                   <div className="flex min-w-0 gap-x-4">
                     <div className="min-w-0 flex-auto">
                       <div className="text-sm font-semibold text-foreground">
-                        <a href={`/automations/${workflow.workflowUuid}`}>
-                          <span className="absolute inset-x-0 -top-px bottom-0 right-32" />
-                          {workflow.label}
-                          <Badge variant="outline" className="ml-2 text-xs font-normal">
-                            {workflow.workflowVersion ? `V${workflow.workflowVersion}` : 'DRAFT'}
-                          </Badge>
-                        </a>
+                        {workflow.kind === 'REFERENCE' ? (
+                          <>
+                            {workflow.label}
+                            <Badge variant="outline" className="ml-2 text-xs font-normal">
+                              ACTIVATED
+                            </Badge>
+                          </>
+                        ) : (
+                          <a href={`/automations/${workflow.workflowUuid}`}>
+                            <span className="absolute inset-x-0 -top-px bottom-0 right-32" />
+                            {workflow.label}
+                            <Badge variant="outline" className="ml-2 text-xs font-normal">
+                              {workflow.workflowVersion ? `V${workflow.workflowVersion}` : 'DRAFT'}
+                            </Badge>
+                          </a>
+                        )}
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {workflow.description || "No description provided"}
@@ -210,7 +221,7 @@ export default function AutomationsPage() {
                       </p>
                     </div>
 
-                    <Switch disabled={!workflow.workflowVersion} checked={workflow.enabled} onCheckedChange={() => toggleWorkflowEnabled(workflow.workflowUuid!, !workflow.enabled)} />
+                    <Switch disabled={workflow.kind !== 'REFERENCE' && !workflow.workflowVersion} checked={workflow.enabled} onCheckedChange={() => toggleWorkflowEnabled(workflow.workflowUuid!, !workflow.enabled)} />
 
                     <Button
                       variant="ghost"
@@ -218,7 +229,7 @@ export default function AutomationsPage() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleDeleteWorkflow(workflow.workflowUuid!);
+                        handleDeleteWorkflow(workflow);
                       }}
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       title="Delete workflow"

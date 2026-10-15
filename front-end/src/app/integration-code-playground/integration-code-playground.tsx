@@ -255,8 +255,14 @@ export function IntegrationCodePlayground() {
             <code>POST /api/embedded/v1/integration-code-workflows/deploy?enable=true</code>. A code integration is
             keyed by its <code>componentName</code>: deploying again for the same component publishes a new version of
             it. <code>enable=true</code> also enables it in this environment, so connected users can connect it right
-            away. ByteChef refuses that when the component needs OAuth app credentials an administrator has to supply
-            first.
+            away.
+            <span className="mt-2 block">
+              Gmail needs OAuth app credentials, so prepare the code integration in ByteChef once before the first
+              deploy: <strong>Embedded &rsaquo; Integrations &rsaquo; New Code Integration</strong> (JavaScript, Gmail
+              component, a name such as <code>Gmail Code</code>), then{" "}
+              <strong>Integration Configurations &rsaquo; New</strong> for it with your Google OAuth client id and
+              secret, enabled. Deploying here then updates that integration and keeps its credentials.
+            </span>
           </>
         }
         fileName={fileName}

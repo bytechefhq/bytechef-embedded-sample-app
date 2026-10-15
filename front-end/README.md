@@ -74,10 +74,23 @@ server; without it both pages show these setup steps instead of the editor.
 
 A code integration is keyed by its component, so deploying the Integration Code Playground's starter (built on
 `googleMail`) and the standalone `bytechef-embedded-integration-sample-code-workflow-javascript` sample update the same
-code integration. A visual Gmail integration you already have is left alone: the deploy creates a separate code
-integration next to it, and the playground picks the one whose description matches the source. Deploying with
-`enable=true` fails with a message when the component needs OAuth app credentials that an administrator has to
-configure in ByteChef first - for Gmail, enter the Gmail OAuth app in the integration's instance configuration.
+code integration. A visual Gmail integration you already have is left alone: the deploy creates or updates a separate
+code integration next to it, and the playground picks the one whose description matches the source.
+
+`enable=true` enables the integration in this environment through its instance configuration, which holds the OAuth app
+credentials. When the code integration has no configuration yet, ByteChef creates one, and refuses to enable it when the
+component needs OAuth app credentials (Gmail does). The refused deploy is rolled back, so prepare the code integration in
+ByteChef once before the first deploy:
+
+1. **Embedded › Integrations › New Code Integration**: pick JavaScript and the **Gmail** component, and give it a name
+   that tells it apart from a visual Gmail integration, for example `Gmail Code`.
+2. **Embedded › Integration Configurations › New**: pick that code integration, choose its OAuth2 authorization, enter
+   the client id and secret of your Google OAuth app (the same ones a visual Gmail configuration uses), and enable it.
+3. Deploy from the playground. It finds the code integration by its component, publishes your source as its new version
+   and moves the configuration to it, keeping the credentials.
+
+Only one code integration per component can exist for the playground to deploy to: with two, the deploy cannot tell which
+one to update and fails.
 
 **Activate a template in place.** Each card on `/automations/templates` has an **Activate** button that opens the SDK's
 `useActivationDialog`: connect the accounts the template needs (through the regular connect dialog, against the

@@ -65,7 +65,7 @@ const JsonViewer = ({label, value}: {label: string; value: unknown}) => {
 };
 
 /**
- * Tool-call card matching AI Hub's AiHubToolCallRenderer: a collapsible row with a `toolName — args preview`
+ * Tool-call card matching AI Hub's AiHubToolCallRenderer: a collapsible row with a `toolName · args preview`
  * header, a status icon (running / error / success), and Input/Result sections when expanded. AG-UI doesn't
  * supply an explicit error flag, so an error is inferred from an `{error: "…"}` result envelope (the shape
  * returned by validation failures such as askUserQuestion's chip-length guard).
@@ -102,7 +102,7 @@ const ToolFallbackImpl: ToolCallMessagePartComponent = ({args, argsText, isError
 
                     <span className="truncate font-medium text-foreground">{toolName}</span>
 
-                    {argsSummary && <span className="truncate text-xs text-muted-foreground">— {argsSummary}</span>}
+                    {argsSummary && <span className="truncate text-xs text-muted-foreground">· {argsSummary}</span>}
 
                     <span className="ml-auto flex items-center">
                         <StatusIcon status={status} />

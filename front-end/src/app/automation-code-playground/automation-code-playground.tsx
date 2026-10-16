@@ -45,7 +45,6 @@ interface DeployResultI {
 interface ReferenceI {
   attentionReason?: string | null;
   automationWorkflowUuid?: string;
-  definition?: string;
   dangling?: boolean;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
@@ -622,16 +621,6 @@ function attentionMessage(attentionReason: string | null | undefined): string | 
   return attentionReason;
 }
 
-function hasRequestTrigger(reference: ReferenceI): boolean {
-  try {
-    const definition = JSON.parse(reference.definition ?? "{}") as { triggers?: { type?: string }[] };
-
-    return (definition.triggers ?? []).some((trigger) => trigger.type?.startsWith("request/"));
-  } catch {
-    return true;
-  }
-}
-
 function runBlockedMessage(reference: ReferenceI | undefined): string | null {
   if (!reference) {
     return "Provision and enable the workflow before running it.";
@@ -639,10 +628,6 @@ function runBlockedMessage(reference: ReferenceI | undefined): string | null {
 
   if (reference.dangling) {
     return "The reference needs attention: its workflow is no longer published.";
-  }
-
-  if (!hasRequestTrigger(reference)) {
-    return "This workflow has no request trigger, so it cannot be run from here: it runs when its own trigger fires.";
   }
 
   if (!reference.enabled) {

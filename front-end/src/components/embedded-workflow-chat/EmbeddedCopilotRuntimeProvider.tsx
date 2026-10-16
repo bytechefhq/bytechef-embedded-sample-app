@@ -12,6 +12,7 @@ import {ReactNode, useMemo, useState} from 'react';
 import {useShallow} from 'zustand/react/shallow';
 
 import {copilotChatUrl} from './constants';
+import {findTurnRewindIndexes} from './findTurnRewindIndexes';
 import {ChatStoreI} from './store';
 
 interface EmbeddedCopilotRuntimeProviderPropsI {
@@ -293,6 +294,14 @@ export function EmbeddedCopilotRuntimeProvider({
             return;
         }
 
+        const turnRewindIndexes = findTurnRewindIndexes(chatStore.getState().messages, agent.messages, editedIndex);
+
+        if (!turnRewindIndexes || turnRewindIndexes.userMessageIndex !== editedIndex) {
+            console.error('Embedded chat edit: could not match the edited message in the agent transcript', editedIndex);
+
+            return;
+        }
+
         const input = message.content[0].text;
 
         try {
@@ -300,7 +309,7 @@ export function EmbeddedCopilotRuntimeProvider({
             // the corrected history without the stale assistant reply.
             editUserMessage(editedIndex, input);
 
-            agent.setMessages(agent.messages.slice(0, editedIndex));
+            agent.setMessages(agent.messages.slice(0, turnRewindIndexes.agentUserMessageIndex));
             agent.addMessage({content: input, id: randomUUID(), role: 'user'});
 
             await runAgentNow();
@@ -310,26 +319,31 @@ export function EmbeddedCopilotRuntimeProvider({
     };
 
     const onReload = async (parentId: string | null) => {
-        // parentId is the id of the message immediately before the assistant reply being regenerated. The
-        // external-store runtime uses idx-based ids, so it's the index of the preceding user message; null
-        // when there is no parent (rare for assistant turns).
+        // parentId is the id of the message immediately before the assistant message being regenerated. The
+        // external-store runtime uses idx-based ids, so it's an index; null when there is no parent. A turn can
+        // span several assistant messages, so the whole turn is regenerated from its user message.
         const parentIndex = parentId == null ? -1 : Number(parentId);
 
-        if (!Number.isInteger(parentIndex) || parentIndex < -1) {
-            console.error('Embedded chat reload: could not resolve message index from parentId', parentId);
+        const turnRewindIndexes = Number.isInteger(parentIndex)
+            ? findTurnRewindIndexes(chatStore.getState().messages, agent.messages, parentIndex)
+            : null;
+
+        if (!turnRewindIndexes) {
+            console.error('Embedded chat reload: could not resolve the turn to refresh from parentId', parentId);
 
             return;
         }
 
         try {
-            // Truncate the UI store to drop the assistant reply (and anything after) but keep the user turn.
-            const truncatedMessages = chatStore.getState().messages.slice(0, parentIndex + 1);
+            // Truncate the UI store to drop the turn's assistant messages (and anything after) but keep its user
+            // message.
+            const truncatedMessages = chatStore.getState().messages.slice(0, turnRewindIndexes.userMessageIndex + 1);
 
             setMessages(truncatedMessages);
 
-            // Mirror the same truncation on the agent transcript and re-run without re-adding the user turn —
+            // Mirror the same truncation on the agent transcript and re-run without re-adding the user message —
             // it's already in the slice we kept.
-            agent.setMessages(agent.messages.slice(0, parentIndex + 1));
+            agent.setMessages(agent.messages.slice(0, turnRewindIndexes.agentUserMessageIndex + 1));
 
             await runAgentNow();
         } catch (error) {

@@ -12,9 +12,19 @@ import { BYTECHEF_APP_BASE_URL } from "@/lib/config";
 import { Loader2Icon, RefreshCwIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+const exampleProvisionBody = {
+  connections: {},
+  inputs: {},
+};
+
 const exampleRunBody = {
   maxResults: 5,
 };
+
+interface ProvisionBodyI {
+  connections?: Record<string, number>;
+  inputs?: Record<string, unknown>;
+}
 
 interface CatalogProjectI {
   id?: number;
@@ -52,6 +62,7 @@ export function AutomationCodePlayground() {
   const [projects, setProjects] = useState<CatalogProjectI[]>([]);
   const [projectsError, setProjectsError] = useState<string | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(false);
+  const [provisionBodyJson, setProvisionBodyJson] = useState(JSON.stringify(exampleProvisionBody, null, 2));
   const [references, setReferences] = useState<ReferenceI[]>([]);
   const [result, setResult] = useState<string | null>(null);
   const [runBodyJson, setRunBodyJson] = useState(JSON.stringify(exampleRunBody, null, 2));
@@ -225,10 +236,16 @@ export function AutomationCodePlayground() {
   const setUpReference = async (encodedUuid: string): Promise<string> => {
     const steps: string[] = [];
 
+    const provisionBody = parseProvisionBody(provisionBodyJson);
+
     let reference = (await loadReferences()).find((item) => item.catalogWorkflowUuid === workflowUuid);
 
     if (!reference) {
-      const response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, { method: "POST" });
+      const response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(provisionBody),
+      });
 
       const text = await response.text();
 
@@ -241,6 +258,23 @@ export function AutomationCodePlayground() {
       reference = (await loadReferences()).find((item) => item.catalogWorkflowUuid === workflowUuid);
     } else {
       steps.push("A reference already exists.");
+
+      // An existing reference keeps its connections (deprovision to pick others), but its inputs can be replaced.
+      if (provisionBody.inputs && Object.keys(provisionBody.inputs).length > 0) {
+        const response = await fetch(`/api/automation-workflow/${encodedUuid}/inputs`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inputs: provisionBody.inputs }),
+        });
+
+        const text = await response.text();
+
+        if (!response.ok) {
+          throw new Error(`${steps.join(" ")} Storing the inputs failed: ${errorMessage(text, response.status)}`);
+        }
+
+        steps.push("Stored its inputs.");
+      }
     }
 
     if (reference && !reference.enabled) {
@@ -287,10 +321,8 @@ export function AutomationCodePlayground() {
             <span className="mt-2 block">
               <strong>Notify Slack on New Email</strong> also calls Slack through its declared <code>slack</code>{" "}
               connection, which provisioning binds to one of the demo user&apos;s Slack connections, so connect a Slack
-              integration on the Integrations page first. This page provisions without inputs, so the reference stays
-              disabled until its <code>channel</code> input holds a Slack channel ID:{" "}
-              <code>PUT /api/embedded/v1/automation/workflows/{"{workflowUuid}"}/inputs</code> with the connected-user
-              JWT.
+              integration on the Integrations page first, and set its <code>channel</code> input to a Slack channel ID
+              in the provision body below.
             </span>
           </>
         }
@@ -430,6 +462,26 @@ export function AutomationCodePlayground() {
               </span>
             </div>
 
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="provisionBodyJson">Provision body (JSON, optional)</Label>
+
+              <Textarea
+                className="font-mono text-sm"
+                id="provisionBodyJson"
+                onChange={(event) => setProvisionBodyJson(event.target.value)}
+                rows={5}
+                value={provisionBodyJson}
+              />
+
+              <span className="text-xs text-muted-foreground">
+                <code>connections</code> maps a component name to one of the connected user&rsquo;s connection ids, for
+                example <code>{'{"slack": 57}'}</code>; a component left out is bound to the user&rsquo;s first
+                connection for it. <code>inputs</code> holds the workflow inputs, for example{" "}
+                <code>{'{"channel": "C0123456"}'}</code> for Notify Slack on New Email. Connections apply when the
+                reference is provisioned; inputs are also stored on an existing reference.
+              </span>
+            </div>
+
             <div className="flex flex-wrap gap-2">
               <ActionButton
                 action="setUp"
@@ -534,4 +586,24 @@ function referenceStatus(reference: ReferenceI | undefined): string {
   }
 
   return reference.enabled ? "Enabled" : "Disabled";
+}
+
+function parseProvisionBody(provisionBodyJson: string): ProvisionBodyI {
+  if (!provisionBodyJson.trim()) {
+    return {};
+  }
+
+  let provisionBody: unknown;
+
+  try {
+    provisionBody = JSON.parse(provisionBodyJson);
+  } catch {
+    throw new Error("The provision body is not valid JSON.");
+  }
+
+  if (provisionBody === null || typeof provisionBody !== "object" || Array.isArray(provisionBody)) {
+    throw new Error('The provision body must be an object such as {"connections": {}, "inputs": {}}.');
+  }
+
+  return provisionBody as ProvisionBodyI;
 }

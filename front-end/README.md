@@ -59,9 +59,12 @@ each new email to the Slack channel in its `channel` input through a declared `s
 account first. For the Slack workflow the catalog project binds one of the demo user's Slack connections, while the
 integration uses the Slack connection an administrator picks when enabling that workflow in the integration's instance
 configuration. A deploy therefore leaves the integration's Slack workflow disabled until an administrator picks that
-connection and sets its `channel` input, and a catalog reference to it stays disabled until its `channel` input is
-stored (`PUT /api/embedded/v1/automation/workflows/{workflowUuid}/inputs`). Deploying is an administrator operation, so
-these pages call
+connection and sets its `channel` input. On the Automation Code Playground, put the input (and, optionally, which of
+the demo user's connections to use) in the provision body, for example
+`{"connections": {"slack": 57}, "inputs": {"channel": "C0123456"}}`: the page sends it with
+`POST /api/embedded/v1/automation/workflow-templates/{workflowUuid}/provision`, and for a reference that already exists
+stores the inputs with `PUT /api/embedded/v1/automation/workflows/{workflowUuid}/inputs`. Deploying is an administrator
+operation, so these pages call
 `POST /api/embedded/v1/automation-project-code-workflows/deploy` and
 `POST /api/embedded/v1/integration-code-workflows/deploy?enable=true` from Next.js route handlers
 (`src/app/api/code-playground/`) with a platform API key instead of the connected-user JWT. The key stays on the

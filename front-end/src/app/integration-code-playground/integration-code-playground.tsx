@@ -177,6 +177,8 @@ export function IntegrationCodePlayground() {
 
   const busy = pendingAction !== null;
 
+  const runBlockedReason = runBlockedMessage(integrationInstance, selectedWorkflowUuid);
+
   const perform = async (action: ActionType) => {
     setResult(null);
     setError(null);
@@ -454,10 +456,12 @@ export function IntegrationCodePlayground() {
 
             <ActionButton
               action="run"
-              disabled={busy || !selectedWorkflowUuid}
+              disabled={busy || runBlockedReason !== null}
               onClick={perform}
               pendingAction={pendingAction}
             />
+
+            {runBlockedReason && <p className="text-xs text-muted-foreground">{runBlockedReason}</p>}
           </CardContent>
         </Card>
 
@@ -513,4 +517,20 @@ function instanceWorkflowStatus(integrationInstance: IntegrationInstanceI | unde
   const instanceWorkflow = integrationInstance.workflows?.find((workflow) => workflow.workflowUuid === workflowUuid);
 
   return instanceWorkflow?.enabled ? "Enabled" : "Disabled";
+}
+
+function runBlockedMessage(integrationInstance: IntegrationInstanceI | undefined, workflowUuid: string): string | null {
+  if (!workflowUuid) {
+    return "Deploy the integration and select a workflow before running it.";
+  }
+
+  if (!integrationInstance) {
+    return "Connect the integration before running it.";
+  }
+
+  if (instanceWorkflowStatus(integrationInstance, workflowUuid) !== "Enabled") {
+    return "Enable the workflow before running it.";
+  }
+
+  return null;
 }

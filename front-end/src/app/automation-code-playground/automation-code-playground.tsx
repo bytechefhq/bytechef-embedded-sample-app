@@ -43,7 +43,9 @@ interface DeployResultI {
 }
 
 interface ReferenceI {
+  attentionReason?: string | null;
   automationWorkflowUuid?: string;
+  definition?: string;
   dangling?: boolean;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
@@ -306,6 +308,8 @@ export function AutomationCodePlayground() {
 
   const busy = pendingAction !== null;
 
+  const runBlockedReason = workflowUuid ? runBlockedMessage(selectedReference) : null;
+
   return (
     <div className="flex w-full flex-col gap-6">
       <h1 className="text-xl font-semibold">Automation Code Playground</h1>
@@ -513,10 +517,12 @@ export function AutomationCodePlayground() {
 
             <ActionButton
               action="run"
-              disabled={busy || !workflowUuid}
+              disabled={busy || !workflowUuid || runBlockedReason !== null}
               onClick={perform}
               pendingAction={pendingAction}
             />
+
+            {runBlockedReason && <p className="text-xs text-muted-foreground">{runBlockedReason}</p>}
           </CardContent>
         </Card>
 
@@ -585,7 +591,69 @@ function referenceStatus(reference: ReferenceI | undefined): string {
     return "Needs attention";
   }
 
-  return reference.enabled ? "Enabled" : "Disabled";
+  const attention = attentionMessage(reference.attentionReason);
+
+  if (reference.enabled) {
+    return attention ? `Enabled, ${attention}` : "Enabled";
+  }
+
+  return attention ? `Disabled, ${attention}` : "Disabled";
+}
+
+function attentionMessage(attentionReason: string | null | undefined): string | null {
+  if (!attentionReason) {
+    return null;
+  }
+
+  const [kind, name] = attentionReason.split(":");
+
+  if (kind === "INPUT_REQUIRED") {
+    return `needs the ${name} input`;
+  }
+
+  if (kind === "MISSING_CONNECTION") {
+    return `needs a ${name} connection`;
+  }
+
+  if (kind === "UPDATE_PENDING") {
+    return "a newer version is waiting";
+  }
+
+  return attentionReason;
+}
+
+function hasRequestTrigger(reference: ReferenceI): boolean {
+  try {
+    const definition = JSON.parse(reference.definition ?? "{}") as { triggers?: { type?: string }[] };
+
+    return (definition.triggers ?? []).some((trigger) => trigger.type?.startsWith("request/"));
+  } catch {
+    return true;
+  }
+}
+
+function runBlockedMessage(reference: ReferenceI | undefined): string | null {
+  if (!reference) {
+    return "Provision and enable the workflow before running it.";
+  }
+
+  if (reference.dangling) {
+    return "The reference needs attention: its workflow is no longer published.";
+  }
+
+  if (!hasRequestTrigger(reference)) {
+    return "This workflow has no request trigger, so it cannot be run from here: it runs when its own trigger fires.";
+  }
+
+  if (!reference.enabled) {
+    const attention = attentionMessage(reference.attentionReason);
+
+    return attention
+      ? `The reference is disabled: it ${attention}. Set it in the provision body, then Provision and Enable.`
+      : "The reference is disabled. Provision and Enable enables it.";
+  }
+
+  return null;
 }
 
 function parseProvisionBody(provisionBodyJson: string): ProvisionBodyI {

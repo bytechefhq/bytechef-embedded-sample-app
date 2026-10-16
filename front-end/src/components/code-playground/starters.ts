@@ -11,8 +11,6 @@ export const automationStarterSource = `({
             name: "greetOnRequest",
             label: "Greet on Request",
             description: "Answers a request with a greeting.",
-            // A request trigger makes the workflow callable through the embedded public endpoints.
-            // awaitWorkflowAndRespond makes Run return the workflow outputs instead of an empty 200.
             triggers: [{name: "request", type: "request/v1/awaitWorkflowAndRespond"}],
             outputs: [{name: "greeting", task: "greet"}],
             tasks: [
@@ -31,9 +29,6 @@ export const automationStarterSource = `({
             name: "summarizeNewEmail",
             label: "Summarize New Email",
             description: "Runs for every new email in the connected user's inbox and logs who sent it.",
-            // Provisioning binds the Gmail trigger to one of the connected user's Gmail connections - connect the
-            // Gmail integration first. It has no request trigger, so Run cannot call it: once provisioned and enabled
-            // it runs whenever an email arrives.
             triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
             outputs: [{name: "summary", task: "summarize"}],
             tasks: [
@@ -62,9 +57,6 @@ export const automationStarterSource = `({
                 {
                     name: "fetchEmails",
                     label: "Fetch Emails",
-                    // A code task's perform calls actions itself, so it declares the connections it uses; the name is
-                    // what perform passes to the action. Provisioning binds each one to a connection of the connected
-                    // user on the same component.
                     connections: [{componentName: "googleMail", name: "gmail"}],
                     perform: function (context) {
                         const request = context.input()["request"] || {};
@@ -84,7 +76,6 @@ export const automationStarterSource = `({
             name: "notifySlackOnNewEmail",
             label: "Notify Slack on New Email",
             description: "Posts every new email in the connected user's inbox to a Slack channel.",
-            // Takes its options from Slack's channel input, so the channel is picked from the workspace's channels.
             inputs: [
                 {
                     name: "channel", label: "Slack Channel", type: "STRING", required: true,
@@ -98,9 +89,6 @@ export const automationStarterSource = `({
                     name: "postToSlack",
                     label: "Post to Slack",
                     description: "Posts the sender and subject with the Slack Send Channel Message action.",
-                    // The Gmail trigger needs no declaration, but the task calls Slack itself, so it declares
-                    // that connection and passes the name. Provisioning binds it to one of the connected user's
-                    // Slack connections.
                     connections: [{componentName: "slack", name: "slack"}],
                     perform: function (context) {
                         const email = context.input("newEmail");
@@ -135,8 +123,6 @@ export const integrationStarterSource = `({
             name: "summarizeNewEmail",
             label: "Summarize New Email",
             description: "Runs for every new email in the connected user's inbox and logs who sent it.",
-            // A Gmail trigger on a Gmail integration runs on the connection the connected user created when they
-            // connected the integration - nothing to declare. It needs no call: once enabled it runs on its own.
             triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
             outputs: [{name: "summary", task: "summarize"}],
             tasks: [
@@ -160,7 +146,6 @@ export const integrationStarterSource = `({
             name: "fetchRecentEmails",
             label: "Fetch Recent Emails",
             description: "Returns the connected user's most recent emails, optionally only those from one sender.",
-            // awaitWorkflowAndRespond makes Run return the workflow outputs.
             triggers: [{name: "request", type: "request/v1/awaitWorkflowAndRespond"}],
             outputs: [{name: "emails", task: "fetchEmails"}],
             tasks: [
@@ -168,8 +153,6 @@ export const integrationStarterSource = `({
                     name: "fetchEmails",
                     label: "Fetch Emails",
                     description: "Searches the inbox with the Gmail Search Email action.",
-                    // A call to the integration's own component needs no declared connection: it runs on the connected
-                    // user's integration connection. Declare and name only connections to other components.
                     perform: function (context) {
                         const request = context.input()["request"] || {};
                         const body = request.body || {};
@@ -188,7 +171,6 @@ export const integrationStarterSource = `({
             name: "notifySlackOnNewEmail",
             label: "Notify Slack on New Email",
             description: "Posts every new email in the connected user's inbox to a Slack channel.",
-            // Takes its options from Slack's channel input, so the channel is picked from the workspace's channels.
             inputs: [
                 {
                     name: "channel", label: "Slack Channel", type: "STRING", required: true,
@@ -202,9 +184,6 @@ export const integrationStarterSource = `({
                     name: "postToSlack",
                     label: "Post to Slack",
                     description: "Posts the sender and subject with the Slack Send Channel Message action.",
-                    // Slack is not the integration's component, so the task declares its connection and
-                    // passes the name. An administrator picks the Slack connection when enabling the
-                    // workflow in the integration's instance configuration.
                     connections: [{componentName: "slack", name: "slack"}],
                     perform: function (context) {
                         const email = context.input("newEmail");

@@ -319,9 +319,6 @@ export function EmbeddedCopilotRuntimeProvider({
     };
 
     const onReload = async (parentId: string | null) => {
-        // parentId is the id of the message immediately before the assistant message being regenerated. The
-        // external-store runtime uses idx-based ids, so it's an index; null when there is no parent. A turn can
-        // span several assistant messages, so the whole turn is regenerated from its user message.
         const parentIndex = parentId == null ? -1 : Number(parentId);
 
         const turnRewindIndexes = Number.isInteger(parentIndex)
@@ -335,14 +332,10 @@ export function EmbeddedCopilotRuntimeProvider({
         }
 
         try {
-            // Truncate the UI store to drop the turn's assistant messages (and anything after) but keep its user
-            // message.
             const truncatedMessages = chatStore.getState().messages.slice(0, turnRewindIndexes.userMessageIndex + 1);
 
             setMessages(truncatedMessages);
 
-            // Mirror the same truncation on the agent transcript and re-run without re-adding the user message —
-            // it's already in the slice we kept.
             agent.setMessages(agent.messages.slice(0, turnRewindIndexes.agentUserMessageIndex + 1));
 
             await runAgentNow();

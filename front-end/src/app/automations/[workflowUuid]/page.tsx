@@ -9,7 +9,7 @@ export default async function AutomationPage({params}: {params: {workflowUuid: s
 
   return <EmbeddedWorkflowBuilder
     baseUrl={BYTECHEF_APP_BASE_URL}
-    connectionDialogAllowed={true}
+    connectionDialogAllowed={false}
     environment={BYTECHEF_ENVIRONMENT}
     jwtToken={jwtToken}
     workflowUuid={workflowUuid} />;

@@ -14,7 +14,7 @@ export default async function AutomationHubPage() {
       <AutomationHub
         baseUrl={BYTECHEF_APP_BASE_URL}
         className="min-h-0 flex-1"
-        connectionDialogAllowed={true}
+        connectionDialogAllowed={false}
         environment={BYTECHEF_ENVIRONMENT}
         jwtToken={jwtToken} />
     </div>

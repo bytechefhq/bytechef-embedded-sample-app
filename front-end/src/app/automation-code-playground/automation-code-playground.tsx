@@ -284,6 +284,14 @@ export function AutomationCodePlayground() {
             <code>POST /api/embedded/v1/automation-project-code-workflows/deploy</code>. Deploying publishes it to the
             embedded catalog straight away; deploying a project with the same <code>name</code> again publishes a new
             version, which ByteChef rolls out to every reference already provisioned from it.
+            <span className="mt-2 block">
+              <strong>Notify Slack on New Email</strong> also calls Slack through its declared <code>slack</code>{" "}
+              connection, which provisioning binds to one of the demo user&apos;s Slack connections, so connect a Slack
+              integration on the Integrations page first. This page provisions without inputs, so the reference stays
+              disabled until its <code>channel</code> input holds a Slack channel ID:{" "}
+              <code>PUT /api/embedded/v1/automation/workflows/{"{workflowUuid}"}/inputs</code> with the connected-user
+              JWT.
+            </span>
           </>
         }
         fileName={fileName}

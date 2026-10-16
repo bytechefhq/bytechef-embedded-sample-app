@@ -58,7 +58,10 @@ workflow started by the Gmail **New Email** trigger, one that calls the Gmail **
 each new email to the Slack channel in its `channel` input through a declared `slack` connection, so connect a Gmail
 account first. For the Slack workflow the catalog project binds one of the demo user's Slack connections, while the
 integration uses the Slack connection an administrator picks when enabling that workflow in the integration's instance
-configuration. Deploying is an administrator operation, so these pages call
+configuration. A deploy therefore leaves the integration's Slack workflow disabled until an administrator picks that
+connection and sets its `channel` input, and a catalog reference to it stays disabled until its `channel` input is
+stored (`PUT /api/embedded/v1/automation/workflows/{workflowUuid}/inputs`). Deploying is an administrator operation, so
+these pages call
 `POST /api/embedded/v1/automation-project-code-workflows/deploy` and
 `POST /api/embedded/v1/integration-code-workflows/deploy?enable=true` from Next.js route handlers
 (`src/app/api/code-playground/`) with a platform API key instead of the connected-user JWT. The key stays on the

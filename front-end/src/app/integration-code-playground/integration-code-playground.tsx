@@ -263,6 +263,13 @@ export function IntegrationCodePlayground() {
               <strong>Integration Configurations &rsaquo; New</strong> for it with your Google OAuth client id and
               secret, enabled. Deploying here then updates that integration and keeps its credentials.
             </span>
+            <span className="mt-2 block">
+              <strong>Notify Slack on New Email</strong> posts to Slack through its declared <code>slack</code>{" "}
+              connection, which an administrator provides, so the deploy leaves it disabled. In{" "}
+              <strong>Integration Configurations</strong>, edit that workflow on this integration&apos;s configuration,
+              pick a Slack connection, set the <code>channel</code> input to a Slack channel ID and enable it. Its Gmail
+              trigger needs nothing there: it runs on the connected user&apos;s integration connection.
+            </span>
           </>
         }
         fileName={fileName}

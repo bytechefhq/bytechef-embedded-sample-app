@@ -79,6 +79,37 @@ export const automationStarterSource = `({
                     }
                 }
             ]
+        },
+        {
+            name: "notifySlackOnNewEmail",
+            label: "Notify Slack on New Email",
+            description: "Posts every new email in the connected user's inbox to a Slack channel.",
+            inputs: [{name: "channel", label: "Slack Channel ID", type: "STRING", required: true}],
+            triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
+            outputs: [{name: "message", task: "postToSlack"}],
+            tasks: [
+                {
+                    name: "postToSlack",
+                    label: "Post to Slack",
+                    description: "Posts the sender and subject with the Slack Send Channel Message action.",
+                    // The Gmail trigger needs no declaration, but the task calls Slack itself, so it declares
+                    // that connection and passes the name. Provisioning binds it to one of the connected user's
+                    // Slack connections.
+                    connections: [{componentName: "slack", name: "slack"}],
+                    perform: function (context) {
+                        const email = context.input("newEmail");
+
+                        const text = "New email from " + email.from + ": " + email.subject;
+
+                        const message = context.component.slack.sendChannelMessage(
+                            {channel: context.input("channel"), text: text}, "slack");
+
+                        context.log("info", "Posted to Slack: " + text);
+
+                        return message;
+                    }
+                }
+            ]
         }
     ]
 })
@@ -143,6 +174,37 @@ export const integrationStarterSource = `({
                         context.log("info", "Found " + (result.messages || []).length + " emails");
 
                         return result.messages || [];
+                    }
+                }
+            ]
+        },
+        {
+            name: "notifySlackOnNewEmail",
+            label: "Notify Slack on New Email",
+            description: "Posts every new email in the connected user's inbox to a Slack channel.",
+            inputs: [{name: "channel", label: "Slack Channel ID", type: "STRING", required: true}],
+            triggers: [{name: "newEmail", type: "googleMail/v1/newEmailPolling", parameters: {format: "SIMPLE"}}],
+            outputs: [{name: "message", task: "postToSlack"}],
+            tasks: [
+                {
+                    name: "postToSlack",
+                    label: "Post to Slack",
+                    description: "Posts the sender and subject with the Slack Send Channel Message action.",
+                    // Slack is not the integration's component, so the task declares its connection and
+                    // passes the name. An administrator picks the Slack connection when enabling the
+                    // workflow in the integration's instance configuration.
+                    connections: [{componentName: "slack", name: "slack"}],
+                    perform: function (context) {
+                        const email = context.input("newEmail");
+
+                        const text = "New email from " + email.from + ": " + email.subject;
+
+                        const message = context.component.slack.sendChannelMessage(
+                            {channel: context.input("channel"), text: text}, "slack");
+
+                        context.log("info", "Posted to Slack: " + text);
+
+                        return message;
                     }
                 }
             ]

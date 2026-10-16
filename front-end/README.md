@@ -54,8 +54,11 @@ Restart `npm run dev` after changing `.env.local`: `NEXT_PUBLIC_*` values are in
 The **Automation Code Playground** and **Integration Code Playground** pages deploy a JavaScript code workflow you edit in
 the page, then let you run it - a catalog code project is provisioned as a reference for the demo user, a code
 integration is connected and has its workflow enabled on the demo user's integration instance. Both starters include a
-workflow started by the Gmail **New Email** trigger and one that calls the Gmail **Search Email** action through a
-declared connection, so connect a Gmail account first. Deploying is an administrator operation, so these pages call
+workflow started by the Gmail **New Email** trigger, one that calls the Gmail **Search Email** action, and one that posts
+each new email to the Slack channel in its `channel` input through a declared `slack` connection, so connect a Gmail
+account first. For the Slack workflow the catalog project binds one of the demo user's Slack connections, while the
+integration uses the Slack connection an administrator picks when enabling that workflow in the integration's instance
+configuration. Deploying is an administrator operation, so these pages call
 `POST /api/embedded/v1/automation-project-code-workflows/deploy` and
 `POST /api/embedded/v1/integration-code-workflows/deploy?enable=true` from Next.js route handlers
 (`src/app/api/code-playground/`) with a platform API key instead of the connected-user JWT. The key stays on the

@@ -1,7 +1,3 @@
-// Starter sources for the code playgrounds, adapted from the bytechef-embedded-automation-sample-code-workflow-javascript
-// and bytechef-embedded-integration-sample-code-workflow-javascript samples. The project name and descriptions are
-// changed so a playground deploy does not overwrite a project deployed from the standalone sample.
-
 export const automationStarterSource = `({
     name: "Playground Catalog Greeting",
     version: "1",
@@ -111,8 +107,6 @@ export const automationStarterSource = `({
 
 export const automationStarterFileName = "playground_catalog_greeting";
 
-// A code integration is keyed by its component, so a playground deploy and a deploy of the standalone sample
-// (both on googleMail) update the same integration.
 export const integrationStarterSource = `({
     componentName: "googleMail",
     componentVersion: 1,

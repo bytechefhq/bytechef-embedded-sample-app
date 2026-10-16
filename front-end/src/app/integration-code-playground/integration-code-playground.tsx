@@ -267,8 +267,9 @@ export function IntegrationCodePlayground() {
               <strong>Notify Slack on New Email</strong> posts to Slack through its declared <code>slack</code>{" "}
               connection, which an administrator provides, so the deploy leaves it disabled. In{" "}
               <strong>Integration Configurations</strong>, edit that workflow on this integration&apos;s configuration,
-              pick a Slack connection, set the <code>channel</code> input to a Slack channel ID and enable it. Its Gmail
-              trigger needs nothing there: it runs on the connected user&apos;s integration connection.
+              pick a Slack connection and enable it. Its <code>channel</code> input points at Slack&apos;s own channel
+              input, so the connect dialog lists that workspace&apos;s channels to pick from. Its Gmail trigger needs
+              nothing there: it runs on the connected user&apos;s integration connection.
             </span>
           </>
         }

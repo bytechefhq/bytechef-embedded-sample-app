@@ -43,7 +43,7 @@ interface DeployResultI {
 }
 
 interface ReferenceI {
-  catalogWorkflowUuid?: string;
+  automationWorkflowUuid?: string;
   dangling?: boolean;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
@@ -238,7 +238,7 @@ export function AutomationCodePlayground() {
 
     const provisionBody = parseProvisionBody(provisionBodyJson);
 
-    let reference = (await loadReferences()).find((item) => item.catalogWorkflowUuid === workflowUuid);
+    let reference = (await loadReferences()).find((item) => item.automationWorkflowUuid === workflowUuid);
 
     if (!reference) {
       const response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, {
@@ -255,7 +255,7 @@ export function AutomationCodePlayground() {
 
       steps.push("Provisioned a reference.");
 
-      reference = (await loadReferences()).find((item) => item.catalogWorkflowUuid === workflowUuid);
+      reference = (await loadReferences()).find((item) => item.automationWorkflowUuid === workflowUuid);
     } else {
       steps.push("A reference already exists.");
 
@@ -302,7 +302,7 @@ export function AutomationCodePlayground() {
     .filter((template) => template.id)
     .map((template) => ({ label: template.label, workflowUuid: template.id! }));
 
-  const selectedReference = references.find((reference) => reference.catalogWorkflowUuid === workflowUuid);
+  const selectedReference = references.find((reference) => reference.automationWorkflowUuid === workflowUuid);
 
   const busy = pendingAction !== null;
 
@@ -425,7 +425,7 @@ export function AutomationCodePlayground() {
               renderActions={(workflow) => (
                 <span className="text-xs text-muted-foreground">
                   {referenceStatus(
-                    references.find((reference) => reference.catalogWorkflowUuid === workflow.workflowUuid)
+                    references.find((reference) => reference.automationWorkflowUuid === workflow.workflowUuid)
                   )}
                 </span>
               )}

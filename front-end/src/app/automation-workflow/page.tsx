@@ -48,7 +48,7 @@ const exampleRunBody = {
 };
 
 interface AutomationI {
-  catalogWorkflowUuid?: string;
+  automationWorkflowUuid?: string;
   dangling?: boolean;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
@@ -352,16 +352,16 @@ export default function AutomationWorkflowPage() {
           {automations.length > 0 && (
             <ul className="divide-y">
               {automations.map((automation) => (
-                <li className="flex items-center justify-between gap-4 py-2" key={automation.catalogWorkflowUuid}>
+                <li className="flex items-center justify-between gap-4 py-2" key={automation.automationWorkflowUuid}>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">{automation.label || "Untitled"}</span>
 
                     <button
                       className="text-left font-mono text-xs text-muted-foreground hover:underline"
-                      onClick={() => setWorkflowUuid(automation.catalogWorkflowUuid ?? "")}
+                      onClick={() => setWorkflowUuid(automation.automationWorkflowUuid ?? "")}
                       type="button"
                     >
-                      {automation.catalogWorkflowUuid}
+                      {automation.automationWorkflowUuid}
                     </button>
                   </div>
 

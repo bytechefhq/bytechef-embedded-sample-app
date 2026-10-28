@@ -31,7 +31,7 @@ const pages = [
     name: "Request Playground"
   },
   {
-    description: "Provision a published catalog workflow as a reference for the connected user, then enable and run it.",
+    description: "Provision a catalog workflow released to this environment as a reference for the connected user, then enable and run it.",
     href: "/automation-workflow",
     icon: PackagePlusIcon,
     name: "Automation Workflow Playground"

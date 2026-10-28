@@ -88,7 +88,7 @@ export function AutomationCodePlayground() {
     return rows;
   }, []);
 
-  // Lists the published catalog projects the connected user can see and selects the one named `projectName`, which is
+  // Lists the catalog projects released to this environment that the connected user can see and selects the one named `projectName`, which is
   // how the page finds the project it just deployed: the deploy response carries only warnings.
   const loadProjects = useCallback(
     async (projectName?: string) => {
@@ -233,7 +233,8 @@ export function AutomationCodePlayground() {
   };
 
   // Provisions a reference to the catalog workflow when the connected user has none yet, then enables it if it is
-  // still disabled. A redeploy needs neither: ByteChef rolls the new version out to existing references.
+  // still disabled. A redeploy needs neither: the release moves the environment's configuration to the new version, and
+  // existing references follow it.
   const setUpReference = async (encodedUuid: string): Promise<string> => {
     const steps: string[] = [];
 
@@ -318,9 +319,13 @@ export function AutomationCodePlayground() {
         description={
           <>
             Edit a catalog code project and deploy it with{" "}
-            <code>POST /api/embedded/v1/automation-project-code-workflows/deploy</code>. Deploying publishes it to the
-            embedded catalog straight away; deploying a project with the same <code>name</code> again publishes a new
-            version, which ByteChef rolls out to every reference already provisioned from it.
+            <code>POST /api/embedded/v1/automation-project-code-workflows/deploy</code>. Deploying publishes a version and,
+            because this page sends <code>release</code>, releases it to this app&apos;s environment through its
+            configuration, which is what makes the project appear in{" "}
+            <code>GET /api/embedded/v1/automation/projects</code>. Deploying a project with the same{" "}
+            <code>name</code> again publishes a new version and moves the configuration to it, so every reference
+            already provisioned from it follows. A project the administrator turned off in this environment does not
+            appear.
             <span className="mt-2 block">
               <strong>Notify Slack on New Email</strong> also calls Slack through its declared <code>slack</code>{" "}
               connection, which provisioning binds to one of the demo user&apos;s Slack connections, so connect a Slack
@@ -366,7 +371,7 @@ export function AutomationCodePlayground() {
             <CardTitle>2. Pick the Deployed Workflow</CardTitle>
 
             <CardDescription>
-              The published catalog projects from <code>GET /api/embedded/v1/automation/projects</code>. After a deploy
+              The catalog projects released to this environment from <code>GET /api/embedded/v1/automation/projects</code>. After a deploy
               the project whose name matches the source&rsquo;s <code>name</code> is selected.
             </CardDescription>
           </div>
@@ -405,7 +410,7 @@ export function AutomationCodePlayground() {
                   {projectsLoading
                     ? "Loading..."
                     : projects.length === 0
-                      ? "No published projects yet: deploy one above"
+                      ? "No released projects yet: deploy one above"
                       : "Select a project"}
                 </option>
 
@@ -618,6 +623,10 @@ function attentionMessage(attentionReason: string | null | undefined): string | 
     return "a newer version is waiting";
   }
 
+  if (kind === "TURNED_OFF_BY_ADMINISTRATOR") {
+    return "turned off by your administrator; it comes back when they turn it on again";
+  }
+
   return attentionReason;
 }
 
@@ -632,6 +641,10 @@ function runBlockedMessage(reference: ReferenceI | undefined): string | null {
 
   if (!reference.enabled) {
     const attention = attentionMessage(reference.attentionReason);
+
+    if (reference.attentionReason?.startsWith("TURNED_OFF_BY_ADMINISTRATOR")) {
+      return "The reference is paused: it was turned off by your administrator and comes back when they turn it on again.";
+    }
 
     return attention
       ? `The reference is disabled: it ${attention}. Set it in the provision body, then Provision and Enable.`

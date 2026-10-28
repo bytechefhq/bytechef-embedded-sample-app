@@ -184,8 +184,8 @@ export default function AutomationWorkflowPage() {
       <PrepareWorkflowCard
         description={
           <>
-            Programmatic provisioning references a published catalog workflow instead of copying it, so every connected
-            user runs the version you publish.
+            Programmatic provisioning references a catalog workflow released to this environment instead of copying it,
+            so every connected user runs the version the environment&rsquo;s configuration points at.
           </>
         }
         sampleWorkflowJson={sampleWorkflowJson}
@@ -208,6 +208,12 @@ export default function AutomationWorkflowPage() {
 
             <li>
               Publish the project from its <strong>&#8942;</strong> menu.
+            </li>
+
+            <li>
+              Expand the project, open its <strong>Configurations</strong> tab and create a configuration for this
+              app&rsquo;s environment, enabled and pinned to the published version. Without it the project is not
+              released to this environment through a configuration, and step 2 stays empty.
             </li>
 
             <li>Find the workflow&rsquo;s UUID in step 2.</li>
@@ -429,7 +435,7 @@ function FindCatalogWorkflowUuidCard({ onSelect, selectedWorkflowUuid }: FindCat
           <CardTitle>2. Find the Workflow UUID</CardTitle>
 
           <CardDescription>
-            Lists the published catalog projects shown in the Automation Hub with{" "}
+            Lists the catalog projects released to this environment through a configuration and shown in the Automation Hub with{" "}
             <code>GET /api/embedded/v1/automation/projects</code>. Each project carries its{" "}
             <code>workflowTemplates</code>, and a template&rsquo;s <code>id</code> is the workflow UUID.
           </CardDescription>
@@ -461,7 +467,7 @@ function FindCatalogWorkflowUuidCard({ onSelect, selectedWorkflowUuid }: FindCat
                 {projectsLoading
                   ? "Loading..."
                   : projects.length === 0
-                    ? "No published projects in the Automation Hub"
+                    ? "No projects released to this environment"
                     : "Select a project"}
               </option>
 

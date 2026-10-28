@@ -9,15 +9,17 @@ interface DeployRequestI {
 
 interface DeployCodeWorkflowOptionsI {
   defaultFileName: string;
+  extraFields?: Record<string, string>;
   fieldName: string;
   path: string;
 }
 
 // Uploads the posted source as a `.js` file to a ByteChef code workflow deploy endpoint. The request is authenticated
 // with the server-only platform API key, never with the connected-user JWT: deploying is an administrator operation.
+// `extraFields` are sent as additional multipart form fields, for example `release` on the automation deploy.
 export async function deployCodeWorkflow(
   req: Request,
-  { defaultFileName, fieldName, path }: DeployCodeWorkflowOptionsI
+  { defaultFileName, extraFields, fieldName, path }: DeployCodeWorkflowOptionsI
 ): Promise<NextResponse> {
   const platformApiKey = getPlatformApiKey();
 
@@ -52,6 +54,10 @@ export async function deployCodeWorkflow(
     new Blob([source], { type: "text/javascript" }),
     toJavaScriptFileName(typeof fileName === "string" ? fileName : "", defaultFileName)
   );
+
+  for (const [extraFieldName, extraFieldValue] of Object.entries(extraFields ?? {})) {
+    formData.append(extraFieldName, extraFieldValue);
+  }
 
   let response: Response;
 

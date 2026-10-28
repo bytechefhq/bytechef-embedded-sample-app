@@ -101,6 +101,16 @@ ByteChef once before the first deploy:
 Only one code integration per component can exist for the playground to deploy to: with two, the deploy cannot tell which
 one to update and fails.
 
+**Release templates to the environment.** Publishing or deploying a project exposes nothing to connected users on its
+own: embedded automation projects are released to an environment through a configuration (a pinned published version,
+an enabled switch, per-workflow switches and Show in Automation Hub). In ByteChef go to **Embedded › Automation
+Workflows**, expand the project, open the **Configurations** tab and create a configuration for the environment the app
+runs against (`BYTECHEF_ENVIRONMENT`), enabled and pinned to the published version. Without it the Automation Hub and
+templates pages are empty. An administrator can turn a project or workflow off, which pauses connected users'
+references (attention reason `TURNED_OFF_BY_ADMINISTRATOR`) until it is turned on again. The Automation Code
+Playground does this automatically: its deploy route sends the `release` flag, which points the environment's
+configuration at the new version (creating an enabled one if none exists, and never re-enabling a disabled one).
+
 **Activate a template in place.** Each card on `/automations/templates` has an **Activate** button that opens the SDK's
 `useActivationDialog`: connect the accounts the template needs (through the regular connect dialog, against the
 integration that backs each component — so the integration must exist with an enabled configuration in this

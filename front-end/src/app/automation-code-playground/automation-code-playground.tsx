@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { attentionMessage, enableAttentionMessage } from "@/lib/attention-reason";
 import { BYTECHEF_APP_BASE_URL } from "@/lib/config";
 import { Loader2Icon, RefreshCwIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -288,7 +289,9 @@ export function AutomationCodePlayground() {
         throw new Error(`${steps.join(" ")} Enabling failed: ${errorMessage(text, response.status)}`);
       }
 
-      steps.push("Enabled it.");
+      const enableAttention = enableAttentionMessage(text);
+
+      steps.push(enableAttention ? `Enabled it, but it ${enableAttention}.` : "Enabled it.");
     } else if (reference) {
       steps.push("It is enabled.");
     }
@@ -602,32 +605,6 @@ function referenceStatus(reference: ReferenceI | undefined): string {
   }
 
   return attention ? `Disabled, ${attention}` : "Disabled";
-}
-
-function attentionMessage(attentionReason: string | null | undefined): string | null {
-  if (!attentionReason) {
-    return null;
-  }
-
-  const [kind, name] = attentionReason.split(":");
-
-  if (kind === "INPUT_REQUIRED") {
-    return `needs the ${name} input`;
-  }
-
-  if (kind === "MISSING_CONNECTION") {
-    return `needs a ${name} connection`;
-  }
-
-  if (kind === "UPDATE_PENDING") {
-    return "a newer version is waiting";
-  }
-
-  if (kind === "TURNED_OFF_BY_ADMINISTRATOR") {
-    return "turned off by your administrator; it comes back when they turn it on again";
-  }
-
-  return attentionReason;
 }
 
 function runBlockedMessage(reference: ReferenceI | undefined): string | null {

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { enableAttentionMessage } from "@/lib/attention-reason";
 import { Loader2Icon, RefreshCwIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -157,12 +158,19 @@ export default function AutomationWorkflowPage() {
         });
       }
 
-      const formatted = formatBody(await response.text());
+      const responseText = await response.text();
+      const formatted = formatBody(responseText);
 
       if (!response.ok) {
         setError(formatted || `HTTP ${response.status}`);
       } else {
-        setResult(formatted || `${actionLabel(action)} succeeded (HTTP ${response.status})`);
+        const attention = action === "enable" ? enableAttentionMessage(responseText) : null;
+
+        setResult(
+          attention
+            ? `Enabled, but the workflow ${attention}.\n\n${formatted}`
+            : formatted || `${actionLabel(action)} succeeded (HTTP ${response.status})`
+        );
       }
 
       if (action !== "run") {
@@ -240,6 +248,11 @@ export default function AutomationWorkflowPage() {
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="workflowUuid">Catalog workflow UUID</Label>
+
+              <p className="text-sm text-muted-foreground">
+                Projects with <strong>Show in Automation Hub</strong> off are not listed here. To provision one of their
+                workflows, paste its UUID from the administrator&rsquo;s Automation Workflows page into this field.
+              </p>
 
               <Input
                 id="workflowUuid"

@@ -12,7 +12,7 @@ interface IntegrationI {
   icon: string;
   id: number;
   integrationInstances: unknown[];
-  title: string;
+  name: string;
 }
 
 function ConnectDialogOpener({integrationId, jwtToken, onDone}: {integrationId: string; jwtToken: string; onDone: () => void}) {
@@ -148,7 +148,7 @@ export default function IntegrationsPage() {
                     <ReactSVG className="h-16" src={integration.icon} />
                   </div>
 
-                  <h3 className="text-sm font-medium text-gray-900">{integration.title}</h3>
+                  <h3 className="text-sm font-medium text-gray-900">{integration.name}</h3>
 
                   <dl className="mt-1 flex flex-grow flex-col justify-between">
                     <dt className="sr-only">Description</dt>

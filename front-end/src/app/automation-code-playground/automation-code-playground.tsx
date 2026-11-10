@@ -45,7 +45,7 @@ interface DeployResultI {
 
 interface ReferenceI {
   attentionReason?: string | null;
-  automationWorkflowUuid?: string;
+  automationUuid?: string;
   dangling?: boolean;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
@@ -72,7 +72,7 @@ export function AutomationCodePlayground() {
   const [workflowUuid, setWorkflowUuid] = useState("");
 
   const loadReferences = useCallback(async (): Promise<ReferenceI[]> => {
-    const response = await fetch("/api/automation-workflow/workflows");
+    const response = await fetch("/api/automation/workflows");
 
     const text = await response.text();
 
@@ -97,7 +97,7 @@ export function AutomationCodePlayground() {
       setProjectsError(null);
 
       try {
-        const response = await fetch("/api/automation-workflow/projects");
+        const response = await fetch("/api/automation/projects");
 
         const text = await response.text();
 
@@ -196,7 +196,7 @@ export function AutomationCodePlayground() {
       if (action === "setUp") {
         setResult(await setUpReference(encodedUuid));
       } else if (action === "deprovision") {
-        const response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, { method: "DELETE" });
+        const response = await fetch(`/api/automation/${encodedUuid}/provision`, { method: "DELETE" });
 
         const text = await response.text();
 
@@ -241,10 +241,10 @@ export function AutomationCodePlayground() {
 
     const provisionBody = parseProvisionBody(provisionBodyJson);
 
-    let reference = (await loadReferences()).find((item) => item.automationWorkflowUuid === workflowUuid);
+    let reference = (await loadReferences()).find((item) => item.automationUuid === workflowUuid);
 
     if (!reference) {
-      const response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, {
+      const response = await fetch(`/api/automation/${encodedUuid}/provision`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(provisionBody),
@@ -258,13 +258,13 @@ export function AutomationCodePlayground() {
 
       steps.push("Provisioned a reference.");
 
-      reference = (await loadReferences()).find((item) => item.automationWorkflowUuid === workflowUuid);
+      reference = (await loadReferences()).find((item) => item.automationUuid === workflowUuid);
     } else {
       steps.push("A reference already exists.");
 
       // An existing reference keeps its connections (deprovision to pick others), but its inputs can be replaced.
       if (provisionBody.inputs && Object.keys(provisionBody.inputs).length > 0) {
-        const response = await fetch(`/api/automation-workflow/${encodedUuid}/inputs`, {
+        const response = await fetch(`/api/automation/${encodedUuid}/inputs`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ inputs: provisionBody.inputs }),
@@ -281,7 +281,7 @@ export function AutomationCodePlayground() {
     }
 
     if (reference && !reference.enabled) {
-      const response = await fetch(`/api/automation-workflow/${encodedUuid}/enable`, { method: "POST" });
+      const response = await fetch(`/api/automation/${encodedUuid}/enable`, { method: "POST" });
 
       const text = await response.text();
 
@@ -307,7 +307,7 @@ export function AutomationCodePlayground() {
     .filter((template) => template.id)
     .map((template) => ({ label: template.label, workflowUuid: template.id! }));
 
-  const selectedReference = references.find((reference) => reference.automationWorkflowUuid === workflowUuid);
+  const selectedReference = references.find((reference) => reference.automationUuid === workflowUuid);
 
   const busy = pendingAction !== null;
 
@@ -436,7 +436,7 @@ export function AutomationCodePlayground() {
               renderActions={(workflow) => (
                 <span className="text-xs text-muted-foreground">
                   {referenceStatus(
-                    references.find((reference) => reference.automationWorkflowUuid === workflow.workflowUuid)
+                    references.find((reference) => reference.automationUuid === workflow.workflowUuid)
                   )}
                 </span>
               )}

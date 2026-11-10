@@ -1,4 +1,4 @@
-import { forwardToByteChef } from "@/app/api/automation-workflow/forward";
+import { forwardToByteChef } from "@/app/api/automation/forward";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

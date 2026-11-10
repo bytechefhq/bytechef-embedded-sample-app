@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from "react";
 
 const sampleWorkflow = {
   label: "Greeting Reference",
-  description: "Provisioned from the Automation Workflow Playground. Replies to a request with a greeting.",
+  description: "Provisioned from the Automation Playground. Replies to a request with a greeting.",
   inputs: [],
   triggers: [
     {
@@ -49,7 +49,7 @@ const exampleRunBody = {
 };
 
 interface AutomationI {
-  automationWorkflowUuid?: string;
+  automationUuid?: string;
   dangling?: boolean;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
@@ -73,7 +73,7 @@ interface CatalogWorkflowTemplateI {
 
 type ActionType = "deprovision" | "disable" | "enable" | "provision" | "run";
 
-export default function AutomationWorkflowPage() {
+export default function AutomationPage() {
   const [automations, setAutomations] = useState<AutomationI[]>([]);
   const [automationsError, setAutomationsError] = useState<string | null>(null);
   const [automationsLoading, setAutomationsLoading] = useState(false);
@@ -90,7 +90,7 @@ export default function AutomationWorkflowPage() {
     setAutomationsError(null);
 
     try {
-      const response = await fetch("/api/automation-workflow/workflows");
+      const response = await fetch("/api/automation/workflows");
 
       const text = await response.text();
 
@@ -137,15 +137,15 @@ export default function AutomationWorkflowPage() {
         const connections = connectionsJson.trim() ? JSON.parse(connectionsJson) : undefined;
         const inputs = inputsJson.trim() ? JSON.parse(inputsJson) : undefined;
 
-        response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, {
+        response = await fetch(`/api/automation/${encodedUuid}/provision`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: connections || inputs ? JSON.stringify({ connections, inputs }) : undefined,
         });
       } else if (action === "deprovision") {
-        response = await fetch(`/api/automation-workflow/${encodedUuid}/provision`, { method: "DELETE" });
+        response = await fetch(`/api/automation/${encodedUuid}/provision`, { method: "DELETE" });
       } else if (action === "enable" || action === "disable") {
-        response = await fetch(`/api/automation-workflow/${encodedUuid}/enable`, {
+        response = await fetch(`/api/automation/${encodedUuid}/enable`, {
           method: action === "enable" ? "POST" : "DELETE",
         });
       } else {
@@ -187,7 +187,7 @@ export default function AutomationWorkflowPage() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <h1 className="text-xl font-semibold">Automation Workflow Playground</h1>
+      <h1 className="text-xl font-semibold">Automation Playground</h1>
 
       <PrepareWorkflowCard
         description={
@@ -200,13 +200,13 @@ export default function AutomationWorkflowPage() {
         steps={
           <>
             <li>
-              In ByteChef, open <strong>Embedded &rsaquo; Automation Workflows</strong> and create a project.
+              In ByteChef, open <strong>Embedded &rsaquo; Automations</strong> and create a project.
             </li>
 
             <li>
               Keep <strong>Show in Automation Hub</strong> on in the project dialog so step 2 can list it. A project
               with it turned off can be provisioned only from here, but step 2 won&rsquo;t list it: copy the UUID from
-              the editor URL (<code>/embedded/automation-workflows/&#123;workflowUuid&#125;/editor</code>) instead.
+              the editor URL (<code>/embedded/automations/&#123;workflowUuid&#125;/editor</code>) instead.
             </li>
 
             <li>
@@ -251,7 +251,7 @@ export default function AutomationWorkflowPage() {
 
               <p className="text-sm text-muted-foreground">
                 Projects with <strong>Show in Automation Hub</strong> off are not listed here. To provision one of their
-                workflows, paste its UUID from the administrator&rsquo;s Automation Workflows page into this field.
+                workflows, paste its UUID from the administrator&rsquo;s Automations page into this field.
               </p>
 
               <Input
@@ -371,16 +371,16 @@ export default function AutomationWorkflowPage() {
           {automations.length > 0 && (
             <ul className="divide-y">
               {automations.map((automation) => (
-                <li className="flex items-center justify-between gap-4 py-2" key={automation.automationWorkflowUuid}>
+                <li className="flex items-center justify-between gap-4 py-2" key={automation.automationUuid}>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">{automation.label || "Untitled"}</span>
 
                     <button
                       className="text-left font-mono text-xs text-muted-foreground hover:underline"
-                      onClick={() => setWorkflowUuid(automation.automationWorkflowUuid ?? "")}
+                      onClick={() => setWorkflowUuid(automation.automationUuid ?? "")}
                       type="button"
                     >
-                      {automation.automationWorkflowUuid}
+                      {automation.automationUuid}
                     </button>
                   </div>
 
@@ -413,7 +413,7 @@ function FindCatalogWorkflowUuidCard({ onSelect, selectedWorkflowUuid }: FindCat
     setProjectsError(null);
 
     try {
-      const response = await fetch("/api/automation-workflow/projects");
+      const response = await fetch("/api/automation/projects");
 
       const text = await response.text();
 

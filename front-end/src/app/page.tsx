@@ -32,9 +32,9 @@ const pages = [
   },
   {
     description: "Provision a catalog workflow released to this environment as a reference for the connected user, then enable and run it.",
-    href: "/automation-workflow",
+    href: "/automation",
     icon: PackagePlusIcon,
-    name: "Automation Workflow Playground"
+    name: "Automation Playground"
   },
   {
     description: "Chat with an assistant backed by the embedded MCP server and its available tools.",
@@ -49,7 +49,7 @@ const pages = [
     name: "ComponentKit Chat"
   },
   {
-    description: "Browse, create, and manage the automation workflows available in this workspace.",
+    description: "Browse, create, and manage the automations available in this workspace.",
     href: "/automations",
     icon: WorkflowIcon,
     name: "Automations"

@@ -45,8 +45,8 @@ export interface CreateWorkflowPayload {
   description: string;
 }
 
-// Automation workflow project interfaces
-export interface AutomationWorkflowProjectComponent {
+// Automation project interfaces
+export interface AutomationProjectComponent {
   name: string;
   title: string;
   icon: string;
@@ -54,18 +54,18 @@ export interface AutomationWorkflowProjectComponent {
   integrationId?: number | null;
 }
 
-export interface AutomationWorkflowProjectWorkflowTemplate {
+export interface AutomationProjectWorkflowTemplate {
   id: string;
   label: string;
   description: string;
-  components: AutomationWorkflowProjectComponent[];
+  components: AutomationProjectComponent[];
 }
 
-export interface AutomationWorkflowProject {
+export interface AutomationProject {
   id: number;
   name: string;
   description: string;
-  workflowTemplates: AutomationWorkflowProjectWorkflowTemplate[];
+  workflowTemplates: AutomationProjectWorkflowTemplate[];
 }
 
 // A connection the user already created for a given component, returned by
@@ -154,16 +154,16 @@ export async function createWorkflow(payload: CreateWorkflowPayload): Promise<Re
 }
 
 /**
- * Fetch all automation workflow projects (grouped by project, with their workflow templates)
- * @returns Promise that resolves to an array of automation workflow projects
+ * Fetch all automation projects (grouped by project, with their workflow templates)
+ * @returns Promise that resolves to an array of automation projects
  */
-export async function fetchAutomationWorkflowProjects(): Promise<AutomationWorkflowProject[]> {
+export async function fetchAutomationProjects(): Promise<AutomationProject[]> {
   const response = await fetchWithAuth('/api/embedded/v1/automation/projects', {
     method: 'GET'
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch automation workflow projects: ${response.status}`);
+    throw new Error(`Failed to fetch automation projects: ${response.status}`);
   }
 
   return response.json();

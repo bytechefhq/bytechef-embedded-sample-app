@@ -27,7 +27,7 @@ The frontend is a Next.js application that embeds the ByteChef workflow builder.
 
 ## Releasing Templates to the App's Environment
 
-After publishing automation templates, go to **Embedded › Automation Workflows** in ByteChef, expand the project, open
+After publishing automation templates, go to **Embedded › Automations** in ByteChef, expand the project, open
 the **Configurations** tab and create a configuration for the environment the app runs against
 (`BYTECHEF_ENVIRONMENT`), enabled and pinned to the published version. Without it the Automation Hub and templates
 pages are empty. The Automation Code Playground does this automatically through the `release` flag on its deploy

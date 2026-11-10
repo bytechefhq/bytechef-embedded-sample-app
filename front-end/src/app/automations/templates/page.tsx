@@ -6,7 +6,7 @@ import { useActivationDialog } from "@bytechef/embedded";
 import { ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AutomationWorkflowProject, copyWorkflowTemplate, fetchAutomationWorkflowProjects, getToken } from "@/lib/api";
+import { AutomationProject, copyWorkflowTemplate, fetchAutomationProjects, getToken } from "@/lib/api";
 import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
 
 function ActivationDialogOpener({
@@ -51,7 +51,7 @@ function ActivationDialogOpener({
 export default function WorkflowTemplatesPage() {
   const router = useRouter();
 
-  const [projects, setProjects] = useState<AutomationWorkflowProject[] | undefined>();
+  const [projects, setProjects] = useState<AutomationProject[] | undefined>();
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [creatingWorkflowId, setCreatingWorkflowId] = useState<string | null>(null);
@@ -63,7 +63,7 @@ export default function WorkflowTemplatesPage() {
       .then(setJwtToken)
       .catch(() => setJwtToken(null));
 
-    fetchAutomationWorkflowProjects()
+    fetchAutomationProjects()
       .then((data) => {
         setProjects(data);
         setLoading(false);

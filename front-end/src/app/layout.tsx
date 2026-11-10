@@ -40,7 +40,7 @@ const navigation = [
   { name: 'App Event Playground', href: '/app-event', icon: ZapIcon },
   { name: 'Request Playground', href: '/request', icon: WebhookIcon },
   { name: 'Integration Code Playground', href: '/integration-code-playground', icon: CodeXmlIcon },
-  { name: 'Automation Playground', href: '/automation-workflow', icon: PackagePlusIcon },
+  { name: 'Automation Playground', href: '/automation', icon: PackagePlusIcon },
   { name: 'Automation Code Playground', href: '/automation-code-playground', icon: FileCodeIcon },
   { name: 'ComponentKit Chat', href: '/chat-component-kit', icon: MessageCircleIcon },
   { name: 'MCP Chat', href: '/chat-mcp', icon: MessageCircleIcon },

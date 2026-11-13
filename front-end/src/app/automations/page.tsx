@@ -47,7 +47,7 @@ export default function AutomationsPage() {
         fetchWorkflowsData();
       })
       .catch((err) => {
-        setError("Failed to enable workflow workflowUuid: " + workflowUuid + ": " + err.message);
+        setError(`Could not ${enable ? "enable" : "disable"} the workflow: ${err.message}`);
         setLoading(false);
       });
   };

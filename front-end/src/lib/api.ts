@@ -98,9 +98,23 @@ export async function fetchWorkflows(): Promise<Workflow[]> {
  * @returns Promise that resolves to the fetch response
  */
 export async function enableWorkflow(workflowUuid: string, enable: boolean): Promise<Response> {
-  return fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowUuid}/enable`, {
+  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowUuid}/enable`, {
     method: enable ? 'POST' : 'DELETE'
   });
+
+  if (!response.ok) {
+    const problem = await response.json().catch(() => null);
+
+    if (problem?.invalidWorkflowErrorCount) {
+      throw new Error(
+        `it has ${problem.invalidWorkflowErrorCount} validation error(s). Fix them in the workflow, then enable it again.`
+      );
+    }
+
+    throw new Error(problem?.detail || `the server answered ${response.status}`);
+  }
+
+  return response;
 }
 
 /**

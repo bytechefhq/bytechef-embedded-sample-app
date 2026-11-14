@@ -7,6 +7,7 @@ import "./globals.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ArrowRightLeftIcon,
   CalendarIcon,
   ChartPieIcon,
   CodeXmlIcon,
@@ -40,6 +41,7 @@ const navigation = [
   { name: 'App Event Playground', href: '/app-event', icon: ZapIcon },
   { name: 'Request Playground', href: '/request', icon: WebhookIcon },
   { name: 'Integration Code Playground', href: '/integration-code-playground', icon: CodeXmlIcon },
+  { name: 'Field Mapping Playground', href: '/field-mapping', icon: ArrowRightLeftIcon },
   { name: 'Automation Playground', href: '/automation', icon: PackagePlusIcon },
   { name: 'Automation Code Playground', href: '/automation-code-playground', icon: FileCodeIcon },
   { name: 'ComponentKit Chat', href: '/chat-component-kit', icon: MessageCircleIcon },

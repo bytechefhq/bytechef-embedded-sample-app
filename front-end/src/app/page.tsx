@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  ArrowRightLeftIcon,
   FoldersIcon,
   MessageCircleIcon,
   PackagePlusIcon,
@@ -29,6 +30,12 @@ const pages = [
     href: "/request",
     icon: WebhookIcon,
     name: "Request Playground"
+  },
+  {
+    description: "Let a connected user map your app's fields to their integration's fields in the Connect dialog, then preview the mapping both ways.",
+    href: "/field-mapping",
+    icon: ArrowRightLeftIcon,
+    name: "Field Mapping Playground"
   },
   {
     description: "Provision a catalog workflow released to this environment as a reference for the connected user, then enable and run it.",

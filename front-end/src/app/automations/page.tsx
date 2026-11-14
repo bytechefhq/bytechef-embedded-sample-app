@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon, FilePlusIcon, LayoutTemplateIcon, MessageSquareIcon, PlusIcon, SparklesIcon, Trash2Icon, Wand2Icon } from "lucide-react";
+import { ChevronDownIcon, FilePlusIcon, LayoutTemplateIcon, MessageSquareIcon, PlusIcon, SlidersHorizontalIcon, SparklesIcon, Trash2Icon, Wand2Icon } from "lucide-react";
 import CreateWorkflowDialog from "./components/create-workflow-dialog";
 import GenerateWorkflowDialog from "./components/generate-workflow-dialog";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Switch} from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { fetchWorkflows, enableWorkflow, deleteWorkflow, deprovisionWorkflowReference, Workflow } from "@/lib/api";
+import { ActivationDialogOpener } from "@/components/activation-dialog-opener";
+import { fetchWorkflows, enableWorkflow, deleteWorkflow, deprovisionWorkflowReference, getToken, Workflow } from "@/lib/api";
 
 export default function AutomationsPage() {
   const [workflows, setWorkflows] = useState<Workflow[] | undefined>();
@@ -23,6 +24,8 @@ export default function AutomationsPage() {
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [editingAutomationUuid, setEditingAutomationUuid] = useState<string | null>(null);
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -89,6 +92,10 @@ export default function AutomationsPage() {
   };
 
   useEffect(() => {
+    getToken()
+      .then(setJwtToken)
+      .catch(() => setJwtToken(null));
+
     fetchWorkflowsData();
   }, []);
 
@@ -223,6 +230,23 @@ export default function AutomationsPage() {
 
                     <Switch disabled={workflow.kind !== 'REFERENCE' && !workflow.workflowVersion} checked={workflow.enabled} onCheckedChange={() => toggleWorkflowEnabled(workflow.workflowUuid!, !workflow.enabled)} />
 
+                    {workflow.kind === 'REFERENCE' && workflow.automationUuid && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={!jwtToken}
+                        onClick={() => {
+                          setError(null);
+                          setSuccess(null);
+                          setEditingAutomationUuid(workflow.automationUuid!);
+                        }}
+                        className="h-8 w-8 text-muted-foreground"
+                        title="Edit connections and inputs"
+                      >
+                        <SlidersHorizontalIcon className="h-4 w-4" />
+                      </Button>
+                    )}
+
                     <Button
                       variant="ghost"
                       size="icon"
@@ -246,6 +270,19 @@ export default function AutomationsPage() {
             </div>
           )}
         </div>
+
+        {editingAutomationUuid && jwtToken && (
+          <ActivationDialogOpener
+            key={editingAutomationUuid}
+            jwtToken={jwtToken}
+            onDone={() => setEditingAutomationUuid(null)}
+            onSaved={() => {
+              setSuccess("Saved. Use the switch to turn the automation on or off.");
+              fetchWorkflowsData();
+            }}
+            workflowTemplateId={editingAutomationUuid}
+          />
+        )}
 
         <CreateWorkflowDialog
           isOpen={isDialogOpen}

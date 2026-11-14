@@ -1,52 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useActivationDialog } from "@bytechef/embedded";
 import { ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AutomationProject, copyWorkflowTemplate, fetchAutomationProjects, getToken } from "@/lib/api";
-import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
-
-function ActivationDialogOpener({
-  jwtToken,
-  onDone,
-  router,
-  workflowTemplateId,
-}: {
-  jwtToken: string;
-  onDone: () => void;
-  router: ReturnType<typeof useRouter>;
-  workflowTemplateId: string;
-}) {
-  // StrictMode mounts effects twice; open once, and let the hook tear the dialog down on unmount. Calling
-  // closeDialog in a cleanup would fire onClose → onDone and unmount this opener before the dialog shows.
-  const openedRef = useRef(false);
-
-  const { openDialog } = useActivationDialog({
-    baseUrl: BYTECHEF_APP_BASE_URL,
-    environment: BYTECHEF_ENVIRONMENT,
-    jwtToken,
-    onActivated: () => router.push("/automations"),
-    onClose: onDone,
-    onEditWorkflow: (workflowUuid) => router.push(`/automations/${workflowUuid}`),
-    workflowTemplateId,
-  });
-
-  useEffect(() => {
-    if (openedRef.current) {
-      return;
-    }
-
-    openedRef.current = true;
-
-    openDialog();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return null;
-}
+import { ActivationDialogOpener } from "@/components/activation-dialog-opener";
 
 export default function WorkflowTemplatesPage() {
   const router = useRouter();
@@ -183,8 +143,10 @@ export default function WorkflowTemplatesPage() {
           <ActivationDialogOpener
             key={activatingTemplateId}
             jwtToken={jwtToken}
+            onActivated={() => router.push("/automations")}
             onDone={() => setActivatingTemplateId(null)}
-            router={router}
+            onEditWorkflow={(workflowUuid) => router.push(`/automations/${workflowUuid}`)}
+            onSaved={() => router.push("/automations")}
             workflowTemplateId={activatingTemplateId}
           />
         )}

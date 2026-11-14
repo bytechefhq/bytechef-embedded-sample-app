@@ -27,6 +27,8 @@ interface TokenResponse {
 
 // Workflow interfaces
 export interface Workflow {
+  // For a REFERENCE, the uuid of the catalog template it points at: the id the activation dialog opens it by.
+  automationUuid?: string;
   createdDate?: string;
   description: string;
   enabled: boolean;

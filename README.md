@@ -32,3 +32,10 @@ the **Configurations** tab and create a configuration for the environment the ap
 (`BYTECHEF_ENVIRONMENT`), enabled and pinned to the published version. Without it the Automation Hub and templates
 pages are empty. The Automation Code Playground does this automatically through the `release` flag on its deploy
 request. See `front-end/README.md` for details.
+
+## Field Mapping Playground
+
+The **Field Mapping Playground** page lets a connected user map the app's fields to their integration's fields in the
+Connect dialog, shows the stored mapping and previews it on a sample record in both directions, with the rules the
+Field Mapping component applies at run time. See `front-end/README.md` for the workflow it needs and the SDK version
+that renders the mapping UI.

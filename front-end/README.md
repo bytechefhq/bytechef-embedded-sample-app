@@ -116,6 +116,33 @@ configuration at the new version (creating an enabled one if none exists, and ne
 integration that backs each component — so the integration must exist with an enabled configuration in this
 environment), fill its inputs, and activate. "Edit workflow" copies the template and opens it on `/automations/{uuid}`.
 
+### Field Mapping Playground
+
+The **Field Mapping Playground** page (`/field-mapping`) shows how a connected user maps your application's fields to
+their integration's fields in the Connect dialog, and what the Field Mapping component does with that mapping at run
+time.
+
+1. **Prepare the workflow.** The page builds a sample integration workflow for the object name you enter: a
+   `field_mapping` input with that `objectName`, a Request trigger, and the Field Mapping **Map to Integration Object**
+   and **Map to Application Object** actions applied to the request body. Paste it into the Workflow Code Editor of a
+   Salesforce integration, publish it and enable it in the integration's configuration.
+2. **Describe your fields.** Edit the object name and your application's fields (name, label, type). They become
+   `mapObjectFields[objectName].applicationFields`. A dotted name such as `company.name` reaches into a nested object.
+3. **Map in the Connect dialog.** Pick an integration and open the dialog. `objectTypes.get` returns a fixed list and
+   `integrationFields.get` calls `executeAction`, which runs a component action on the user's own connection. The
+   Salesforce entry runs `soqlQuery` against `FieldDefinition`. To support another CRM, add an entry keyed by its
+   component name to `INTEGRATION_FIELD_SOURCES` in `src/app/field-mapping/integration-field-sources.ts`.
+4. **Read the stored mapping.** After the dialog closes, the page reads the saved value back from
+   `GET /api/embedded/v1/integrations/{id}`.
+5. **Preview.** `src/app/field-mapping/apply-field-mapping.ts` applies a mapping to a sample record in the browser with
+   the Field Mapping component's rules, to the integration and back. **Run on ByteChef** sends the same record to the
+   sample workflow so you can compare.
+
+ByteChef sends a field mapping input's type as `FIELD_MAPPING`, and `@bytechef/embedded` 0.4.0 and earlier only render
+the mapping for `field_mapping`. With those versions the dialog shows the workflow without its mapping section. Link an
+SDK build with the fix (see [Developing with the Embedded React SDK](#developing-with-the-embedded-react-sdk)) to see the
+mapping UI; the page lists what to check.
+
 ## Running the Frontend
 
 1. For development (with hot reloading):

@@ -10,6 +10,8 @@ import {
 } from "@assistant-ui/react";
 import { DefaultChatTransport } from "ai";
 
+import { McpToolsSidebar } from "./McpToolsSidebar";
+
 // Welcome-screen suggestions registered via the new assistant-ui suggestions API (no longer hardcoded
 // inside the Thread component). ThreadPrimitive.Suggestions renders these from the runtime scope.
 // Curated to reflect the integrations connected in this sample (Slack, Gmail, Mailchimp, AWS S3) and
@@ -46,8 +48,12 @@ export default function ChatMcpPage() {
 
   return (
     <AssistantRuntimeProvider aui={aui} runtime={runtime}>
-      <div className="flex h-[calc(100vh-2rem)] w-full flex-col">
-        <Thread />
+      <div className="flex h-[calc(100vh-2rem)] w-full">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Thread />
+        </div>
+
+        <McpToolsSidebar className="hidden w-80 shrink-0 md:flex" />
       </div>
     </AssistantRuntimeProvider>
   );

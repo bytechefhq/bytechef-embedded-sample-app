@@ -27,8 +27,13 @@ interface TokenResponse {
 
 // Workflow interfaces
 export interface Workflow {
+  // MISSING_CONNECTION:<component>, INPUT_REQUIRED:<input>, UPDATE_PENDING or INVALID_WORKFLOW:<errorCount>; null when healthy.
+  attentionReason?: string | null;
   // For a REFERENCE, the uuid of the catalog template it points at: the id the activation dialog opens it by.
   automationUuid?: string;
+  components?: AutomationProjectComponent[];
+  // For COPY rows, the uuid of the template the copy was made from.
+  copiedFromWorkflowUuid?: string;
   createdDate?: string;
   description: string;
   enabled: boolean;
@@ -37,7 +42,11 @@ export interface Workflow {
   kind?: 'COPY' | 'REFERENCE';
   label: string;
   lastModifiedDate?: string;
+  // Whether AI agents can call the workflow as an MCP tool. Null when no MCP server offers it to the user.
+  mcpEnabled?: boolean | null;
   name: string;
+  // True when the workflow call trigger is its only trigger, so it only runs when an AI agent calls it.
+  toolOnly?: boolean;
   workflowUuid?: string;
   workflowVersion?: number;
 }
@@ -120,10 +129,44 @@ export async function enableWorkflow(workflowUuid: string, enable: boolean): Pro
 }
 
 /**
- * Delete a workflow
+ * Make a workflow available, or no longer available, to AI agents on every MCP server that offers it to the user
  * @param workflowUuid The uuid of the workflow
- * @returns Promise that resolves to the fetch response
+ * @param enable Whether AI agents can call the workflow as a tool
  */
+export async function enableMcpWorkflow(workflowUuid: string, enable: boolean): Promise<void> {
+  const response = await fetchWithAuth(`/api/embedded/v1/automation/workflows/${workflowUuid}/mcp/enable`, {
+    method: enable ? 'POST' : 'DELETE'
+  });
+
+  if (!response.ok) {
+    throw new Error(`the server answered ${response.status}`);
+  }
+}
+
+export interface Integration {
+  category?: string;
+  description?: string;
+  icon?: string;
+  id: number;
+  integrationInstances?: unknown[];
+  name: string;
+}
+
+/**
+ * Fetch the integrations the user can connect
+ */
+export async function fetchIntegrations(): Promise<Integration[]> {
+  const response = await fetchWithAuth('/api/embedded/v1/integrations', {
+    method: 'GET'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch integrations: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 /**
  * Remove an activated template (a reference) for the current user
  * @param workflowUuid The uuid of the activated template

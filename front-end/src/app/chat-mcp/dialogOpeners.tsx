@@ -51,6 +51,7 @@ export function ConnectDialogOpener({ integrationId, jwtToken, onDone }: Connect
     environment: BYTECHEF_ENVIRONMENT,
     integrationId,
     jwtToken,
+    toolsOnly: true,
   });
 
   useEffect(() => {

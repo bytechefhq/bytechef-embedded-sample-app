@@ -167,6 +167,99 @@ export async function fetchIntegrations(): Promise<Integration[]> {
   return response.json();
 }
 
+export interface IntegrationMcpTool {
+  description?: string;
+  id: number;
+  label?: string;
+  name: string;
+}
+
+export interface IntegrationInstanceMcpTool {
+  enabled: boolean;
+  mcpToolId: number;
+}
+
+export interface IntegrationMcpWorkflow {
+  description?: string;
+  label?: string;
+  workflowUuid: string;
+}
+
+export interface IntegrationInstanceMcpWorkflow {
+  enabled: boolean;
+  workflowUuid: string;
+}
+
+export interface IntegrationDetails {
+  id: number;
+  integrationInstances?: Array<{
+    id: number;
+    mcpTools?: IntegrationInstanceMcpTool[];
+    mcpWorkflows?: IntegrationInstanceMcpWorkflow[];
+  }>;
+  mcpTools?: IntegrationMcpTool[];
+  mcpWorkflows?: IntegrationMcpWorkflow[];
+  name: string;
+}
+
+/**
+ * Fetch an integration with the MCP tools it offers and the user's instances of it
+ * @param integrationId The id of the integration
+ */
+export async function fetchIntegration(integrationId: number): Promise<IntegrationDetails> {
+  const response = await fetchWithAuth(`/api/embedded/v1/integrations/${integrationId}`, {
+    method: 'GET'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch integration ${integrationId}: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Make an integration's MCP tool available, or no longer available, to AI agents for one of the user's instances
+ * @param integrationInstanceId The id of the user's integration instance
+ * @param mcpToolId The id of the MCP tool
+ * @param enable Whether AI agents can call the tool
+ */
+export async function enableMcpIntegrationTool(
+  integrationInstanceId: number,
+  mcpToolId: number,
+  enable: boolean
+): Promise<void> {
+  const response = await fetchWithAuth(
+    `/api/embedded/v1/integration-instances/${integrationInstanceId}/mcp-tools/${mcpToolId}/enable`,
+    { method: enable ? 'POST' : 'DELETE' }
+  );
+
+  if (!response.ok) {
+    throw new Error(`the server answered ${response.status}`);
+  }
+}
+
+/**
+ * Make an integration's workflow tool available, or no longer available, to AI agents for one of the user's instances
+ * @param integrationInstanceId The id of the user's integration instance
+ * @param workflowUuid The uuid of the integration workflow
+ * @param enable Whether AI agents can call the workflow
+ */
+export async function enableMcpIntegrationWorkflow(
+  integrationInstanceId: number,
+  workflowUuid: string,
+  enable: boolean
+): Promise<void> {
+  const response = await fetchWithAuth(
+    `/api/embedded/v1/integration-instances/${integrationInstanceId}/mcp-workflows/${workflowUuid}/enable`,
+    { method: enable ? 'POST' : 'DELETE' }
+  );
+
+  if (!response.ok) {
+    throw new Error(`the server answered ${response.status}`);
+  }
+}
+
 /**
  * Remove an activated template (a reference) for the current user
  * @param workflowUuid The uuid of the activated template

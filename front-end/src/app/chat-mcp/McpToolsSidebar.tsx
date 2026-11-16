@@ -1,18 +1,24 @@
 "use client";
 
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { BotIcon, Loader2Icon, PlugIcon, RefreshCwIcon, WrenchIcon } from "lucide-react";
+import { BotIcon, InfoIcon, Loader2Icon, PencilIcon, PlugIcon, RefreshCwIcon, Trash2Icon, WrenchIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   type AutomationProject,
+  deprovisionWorkflowReference,
+  enableMcpIntegrationTool,
+  enableMcpIntegrationWorkflow,
   enableMcpWorkflow,
   fetchAutomationProjects,
+  fetchIntegration,
   fetchIntegrations,
   fetchWorkflows,
   getToken,
   type Integration,
+  type IntegrationDetails,
   type Workflow,
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -58,6 +64,47 @@ function getMissingIntegrationId(workflow: Workflow): number | undefined {
   return component?.integrationId ?? undefined;
 }
 
+type IntegrationToolRow = {
+  description?: string;
+  enabled: boolean;
+  key: string;
+  label: string;
+  mcpToolId?: number;
+  workflowUuid?: string;
+};
+
+function getIntegrationToolRows(details: IntegrationDetails | undefined): IntegrationToolRow[] {
+  const instance = details?.integrationInstances?.[0];
+
+  if (!details || !instance) {
+    return [];
+  }
+
+  const componentTools = (details.mcpTools ?? []).map((mcpTool) => ({
+    description: mcpTool.description,
+    enabled: instance.mcpTools?.find((instanceTool) => instanceTool.mcpToolId === mcpTool.id)?.enabled ?? false,
+    key: `tool:${instance.id}:${mcpTool.id}`,
+    label: mcpTool.label ?? mcpTool.name,
+    mcpToolId: mcpTool.id,
+  }));
+
+  const workflowTools = (details.mcpWorkflows ?? []).map((mcpWorkflow) => ({
+    description: mcpWorkflow.description,
+    enabled:
+      instance.mcpWorkflows?.find((instanceWorkflow) => instanceWorkflow.workflowUuid === mcpWorkflow.workflowUuid)
+        ?.enabled ?? false,
+    key: `workflow:${instance.id}:${mcpWorkflow.workflowUuid}`,
+    label: mcpWorkflow.label ?? mcpWorkflow.workflowUuid,
+    workflowUuid: mcpWorkflow.workflowUuid,
+  }));
+
+  return [...componentTools, ...workflowTools].sort((first, second) => first.label.localeCompare(second.label));
+}
+
+function getEditableTemplateId(workflow: Workflow): string | undefined {
+  return workflow.kind === "REFERENCE" && workflow.automationUuid ? workflow.automationUuid : undefined;
+}
+
 function Section({ children, count, icon, title }: { children: ReactNode; count?: number; icon: ReactNode; title: string }) {
   return (
     <section className="border-b border-gray-200 px-2 py-3 last:border-b-0">
@@ -79,12 +126,15 @@ function Section({ children, count, icon, title }: { children: ReactNode; count?
 export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
   const [activatingTemplateId, setActivatingTemplateId] = useState<string | null>(null);
   const [connectingIntegrationId, setConnectingIntegrationId] = useState<string | null>(null);
+  const [deactivatingTemplateId, setDeactivatingTemplateId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [integrationDetails, setIntegrationDetails] = useState<Record<number, IntegrationDetails>>({});
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<AutomationProject[]>([]);
   const [togglingWorkflowUuid, setTogglingWorkflowUuid] = useState<string | null>(null);
+  const [togglingToolKey, setTogglingToolKey] = useState<string | null>(null);
   const [tools, setTools] = useState<McpToolSummary[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
 
@@ -145,6 +195,10 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
   const toolIntegrations = useMemo<ToolIntegration[]>(() => {
     const toolCounts = new Map<number, number>();
 
+    for (const integrationId of Object.keys(integrationDetails)) {
+      toolCounts.set(Number(integrationId), 0);
+    }
+
     for (const tool of tools) {
       if (tool.integrationId !== undefined) {
         toolCounts.set(tool.integrationId, (toolCounts.get(tool.integrationId) ?? 0) + 1);
@@ -163,7 +217,7 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
         };
       })
       .sort((first, second) => first.name.localeCompare(second.name));
-  }, [integrations, tools]);
+  }, [integrationDetails, integrations, tools]);
 
   const handleToggleMcp = useCallback(
     async (workflowUuid: string, enable: boolean) => {
@@ -187,9 +241,85 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
     [loadTools]
   );
 
+  const handleDeactivate = useCallback(
+    async (templateId: string, label: string | undefined) => {
+      if (!window.confirm(`Deactivate "${label ?? "this automation"}"? Its connections and inputs are removed.`)) {
+        return;
+      }
+
+      setDeactivatingTemplateId(templateId);
+      setError(null);
+
+      try {
+        const response = await deprovisionWorkflowReference(templateId);
+
+        if (!response.ok) {
+          throw new Error(`the server answered ${response.status}`);
+        }
+
+        const [loadedWorkflows] = await Promise.all([fetchWorkflows(), loadTools()]);
+
+        setWorkflows(loadedWorkflows);
+      } catch (deactivateError) {
+        setError(
+          `Could not deactivate the automation: ${
+            deactivateError instanceof Error ? deactivateError.message : String(deactivateError)
+          }`
+        );
+      } finally {
+        setDeactivatingTemplateId(null);
+      }
+    },
+    [loadTools]
+  );
+
+  const loadIntegrationDetails = useCallback(async (integrationIds: number[]) => {
+    const loadedDetails = await Promise.all(integrationIds.map((integrationId) => fetchIntegration(integrationId)));
+
+    setIntegrationDetails(Object.fromEntries(loadedDetails.map((details) => [details.id, details])));
+  }, []);
+
+  const handleToggleIntegrationTool = useCallback(
+    async (integrationId: number, integrationInstanceId: number, tool: IntegrationToolRow, enable: boolean) => {
+      setTogglingToolKey(tool.key);
+      setError(null);
+
+      try {
+        if (tool.workflowUuid !== undefined) {
+          await enableMcpIntegrationWorkflow(integrationInstanceId, tool.workflowUuid, enable);
+        } else {
+          await enableMcpIntegrationTool(integrationInstanceId, tool.mcpToolId!, enable);
+        }
+
+        const [details] = await Promise.all([fetchIntegration(integrationId), loadTools()]);
+
+        setIntegrationDetails((previous) => ({ ...previous, [integrationId]: details }));
+      } catch (toggleError) {
+        setError(
+          `Could not change the tool: ${toggleError instanceof Error ? toggleError.message : String(toggleError)}`
+        );
+      } finally {
+        setTogglingToolKey(null);
+      }
+    },
+    [loadTools]
+  );
+
+  const toolIntegrationIdsKey = toolIntegrations.map((toolIntegration) => toolIntegration.id).join(",");
+
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  useEffect(() => {
+    if (!toolIntegrationIdsKey) {
+      return;
+    }
+
+    loadIntegrationDetails(toolIntegrationIdsKey.split(",").map(Number)).catch((loadError: unknown) => {
+      setError(loadError instanceof Error ? loadError.message : String(loadError));
+    });
+  }, [loadIntegrationDetails, toolIntegrationIdsKey]);
 
   return (
     <aside
@@ -239,41 +369,83 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
               <ul className="space-y-1">
                 {agentAutomations.map((workflow) => {
                   const missingIntegrationId = getMissingIntegrationId(workflow);
+                  const editableTemplateId = getEditableTemplateId(workflow);
 
                   return (
                     <li className="rounded-md px-2 py-2 hover:bg-white" key={workflow.workflowUuid}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-1">
                           <p className="truncate text-sm font-medium text-gray-900" title={workflow.label}>
                             {workflow.label}
                           </p>
 
                           {workflow.toolOnly && (
-                            <span className="mt-1 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">
-                              Runs only when an agent calls it
-                            </span>
+                            <TooltipProvider delay={0}>
+                              <Tooltip>
+                                <TooltipTrigger
+                                  aria-label="Runs only when an agent calls it"
+                                  className="shrink-0 text-gray-400 hover:text-gray-600"
+                                >
+                                  <InfoIcon className="size-3.5" />
+                                </TooltipTrigger>
+
+                                <TooltipContent>Runs only when an agent calls it</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                         </div>
 
-                        <Switch
-                          aria-label={`Available to AI agents: ${workflow.label}`}
-                          checked={workflow.mcpEnabled === true}
-                          disabled={!workflow.workflowUuid || togglingWorkflowUuid === workflow.workflowUuid}
-                          onCheckedChange={(checked) => void handleToggleMcp(workflow.workflowUuid!, checked)}
-                          title="Available to AI agents"
-                        />
+                        <div className="flex shrink-0 items-center gap-2">
+                          {editableTemplateId !== undefined && (
+                            <Button
+                              aria-label={`Edit ${workflow.label}`}
+                              className="size-7 text-gray-500 hover:text-gray-900"
+                              disabled={!jwtToken}
+                              onClick={() => setActivatingTemplateId(editableTemplateId)}
+                              size="icon"
+                              title="Edit"
+                              variant="ghost"
+                            >
+                              <PencilIcon className="size-3.5" />
+                            </Button>
+                          )}
+
+                          {editableTemplateId !== undefined && (
+                            <Button
+                              aria-label={`Deactivate ${workflow.label}`}
+                              className="size-7 text-gray-500 hover:text-red-600"
+                              disabled={!jwtToken || deactivatingTemplateId === editableTemplateId}
+                              onClick={() => void handleDeactivate(editableTemplateId, workflow.label)}
+                              size="icon"
+                              title="Deactivate"
+                              variant="ghost"
+                            >
+                              <Trash2Icon className="size-3.5" />
+                            </Button>
+                          )}
+
+                          <Switch
+                            aria-label={`Available to AI agents: ${workflow.label}`}
+                            checked={workflow.mcpEnabled === true}
+                            disabled={!workflow.workflowUuid || togglingWorkflowUuid === workflow.workflowUuid}
+                            onCheckedChange={(checked) => void handleToggleMcp(workflow.workflowUuid!, checked)}
+                            title="Available to AI agents"
+                          />
+                        </div>
                       </div>
 
                       {missingIntegrationId !== undefined && (
-                        <Button
-                          className="mt-2 h-7 text-xs"
-                          disabled={!jwtToken}
-                          onClick={() => setConnectingIntegrationId(String(missingIntegrationId))}
-                          size="sm"
-                          variant="outline"
-                        >
-                          Connect the app it needs
-                        </Button>
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            className="h-7 text-xs"
+                            disabled={!jwtToken}
+                            onClick={() => setConnectingIntegrationId(String(missingIntegrationId))}
+                            size="sm"
+                            variant="outline"
+                          >
+                            Connect the app it needs
+                          </Button>
+                        </div>
                       )}
                     </li>
                   );
@@ -316,30 +488,74 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
               )}
 
               <ul className="space-y-1">
-                {toolIntegrations.map((toolIntegration) => (
-                  <li
-                    className="flex items-center justify-between gap-2 rounded-md px-2 py-2 hover:bg-white"
-                    key={toolIntegration.id}
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm text-gray-900">{toolIntegration.name}</p>
+                {toolIntegrations.map((toolIntegration) => {
+                  const details = integrationDetails[toolIntegration.id];
+                  const instance = details?.integrationInstances?.[0];
+                  const toolRows = getIntegrationToolRows(details);
 
-                      <p className="text-xs text-gray-500">
-                        {toolIntegration.toolCount} {toolIntegration.toolCount === 1 ? "tool" : "tools"}
-                      </p>
-                    </div>
+                  return (
+                    <li className="rounded-md px-2 py-2 hover:bg-white" key={toolIntegration.id}>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm text-gray-900">{toolIntegration.name}</p>
 
-                    <Button
-                      className={cn("h-7 shrink-0 text-xs", toolIntegration.connected && "text-green-700")}
-                      disabled={!jwtToken}
-                      onClick={() => setConnectingIntegrationId(String(toolIntegration.id))}
-                      size="sm"
-                      variant="outline"
-                    >
-                      {toolIntegration.connected ? "Connected" : "Connect"}
-                    </Button>
-                  </li>
-                ))}
+                          <p className="text-xs text-gray-500">
+                            {toolIntegration.toolCount} {toolIntegration.toolCount === 1 ? "tool" : "tools"}
+                          </p>
+                        </div>
+
+                        <Button
+                          className={cn("h-7 shrink-0 text-xs", toolIntegration.connected && "text-green-700")}
+                          disabled={!jwtToken}
+                          onClick={() => setConnectingIntegrationId(String(toolIntegration.id))}
+                          size="sm"
+                          variant="outline"
+                        >
+                          {toolIntegration.connected ? "Connected" : "Connect"}
+                        </Button>
+                      </div>
+
+                      {instance && toolRows.length > 0 && (
+                        <ul className="mt-2 space-y-1 border-l border-gray-200 pl-3">
+                          {toolRows.map((toolRow) => (
+                            <li className="flex items-center justify-between gap-2" key={toolRow.key}>
+                              <div className="flex min-w-0 items-center gap-1">
+                                <p className="truncate text-xs text-gray-800" title={toolRow.label}>
+                                  {toolRow.label}
+                                </p>
+
+                                {toolRow.description && (
+                                  <TooltipProvider delay={0}>
+                                    <Tooltip>
+                                      <TooltipTrigger
+                                        aria-label={toolRow.description}
+                                        className="shrink-0 text-gray-400 hover:text-gray-600"
+                                      >
+                                        <InfoIcon className="size-3" />
+                                      </TooltipTrigger>
+
+                                      <TooltipContent>{toolRow.description}</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
+
+                              <Switch
+                                aria-label={`Available to AI agents: ${toolRow.label}`}
+                                checked={toolRow.enabled}
+                                disabled={togglingToolKey === toolRow.key}
+                                onCheckedChange={(checked) =>
+                                  void handleToggleIntegrationTool(toolIntegration.id, instance.id, toolRow, checked)
+                                }
+                                title="Available to AI agents"
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </Section>
 

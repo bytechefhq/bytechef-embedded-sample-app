@@ -9,7 +9,7 @@ import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
 
 const input = {
-  "model": "gpt-4o",
+  "model": "claude-opus-5-5",
   "format": "ADVANCED",
   "messages": [
     {
@@ -23,7 +23,7 @@ const input = {
 }
 
 export default function ComponentKitPage() {
-  const [componentName, setComponentName] = useState("openai");
+  const [componentName, setComponentName] = useState("anthropic");
   const [componentVersion, setComponentVersion] = useState(1);
   const [actionName, setActionName] = useState("ask");
   const [inputJson, setInputJson] = useState(JSON.stringify(input, null, 2));
@@ -89,7 +89,7 @@ export default function ComponentKitPage() {
                   <Input
                     id="componentName"
                     onChange={(event) => setComponentName(event.target.value)}
-                    placeholder="e.g. openai"
+                    placeholder="e.g. anthropic"
                     value={componentName}
                   />
                 </div>

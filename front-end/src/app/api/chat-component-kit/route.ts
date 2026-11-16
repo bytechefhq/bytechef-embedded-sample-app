@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
 import {
   streamText,
@@ -12,6 +11,7 @@ import {
 } from "ai";
 
 import { getToken } from "@/lib/api";
+import { getChatModel } from "@/lib/chat-model";
 import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT, BYTECHEF_EXTERNAL_USER_ID } from "@/lib/config";
 
 interface ByteChefToolI {
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
   const tools = await getTools();
 
   const result = streamText({
-    model: openai.chat("gpt-5"),
+    model: getChatModel(),
     messages: await convertToModelMessages(messages),
     tools: {
       ...tools,

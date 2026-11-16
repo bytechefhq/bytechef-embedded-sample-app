@@ -28,7 +28,7 @@ This is a Next.js application that uses integrations and embeds the ByteChef wor
 
 Create a `.env.local` file in `front-end/` (it is gitignored). Every variable is optional; set only the ones whose default
 does not fit. The `NEXT_PUBLIC_*` variables are read in `src/lib/config.ts`, `BYTECHEF_PLATFORM_API_KEY` in
-`src/lib/server-config.ts`; `OPENAI_API_KEY` is read where it is used.
+`src/lib/server-config.ts`; `ANTHROPIC_API_KEY` and `ANTHROPIC_MODEL` are read in `src/lib/chat-model.ts`.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -37,7 +37,8 @@ does not fit. The `NEXT_PUBLIC_*` variables are read in `src/lib/config.ts`, `BY
 | `NEXT_PUBLIC_BYTECHEF_ENVIRONMENT` | `DEVELOPMENT` | ByteChef environment every call targets: `DEVELOPMENT`, `STAGING` or `PRODUCTION`. Sent as the `X-ENVIRONMENT` header; integrations, connections and workflows are separate per environment. |
 | `NEXT_PUBLIC_BYTECHEF_EXTERNAL_USER_ID` | `1234567890` | Your app's id for the demo user. It becomes the JWT `sub` claim, so ByteChef scopes this user's connections and workflows to it. Change it to simulate a different end user. |
 | `NEXT_PUBLIC_BYTECHEF_MCP_SERVER_URL` | *(empty)* | URL of a ByteChef MCP Server. Only needed for the **Chat MCP** page. |
-| `OPENAI_API_KEY` | *(none)* | OpenAI API key for the **Chat MCP** and **Chat Component Kit** pages. |
+| `ANTHROPIC_API_KEY` | *(none)* | Anthropic API key for the **Chat MCP** and **Chat Component Kit** pages. |
+| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Claude model those two chat pages use. |
 | `BYTECHEF_PLATFORM_API_KEY` | *(none)* | Embedded API key of a ByteChef administrator, used server-side only by the **Automation Code Playground** and **Integration Code Playground** pages to deploy code workflows. See [Code playgrounds](#code-playgrounds). Never prefix it with `NEXT_PUBLIC_`. |
 
 Example for ByteChef Cloud:

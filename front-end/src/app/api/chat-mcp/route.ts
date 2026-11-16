@@ -1,5 +1,4 @@
 import { createMCPClient } from "@ai-sdk/mcp";
-import { openai } from "@ai-sdk/openai";
 import { frontendTools } from "@assistant-ui/react-ai-sdk";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import {
@@ -11,6 +10,7 @@ import {
 } from "ai";
 
 import { getToken } from "@/lib/api";
+import { getChatModel } from "@/lib/chat-model";
 import { BYTECHEF_ENVIRONMENT, BYTECHEF_MCP_SERVER_URL } from "@/lib/config";
 
 export async function POST(req: Request) {
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   const tools = await mcpClient.tools();
 
   const result = streamText({
-    model: openai.chat("gpt-5"),
+    model: getChatModel(),
     messages: await convertToModelMessages(messages),
     tools: {
       ...tools,

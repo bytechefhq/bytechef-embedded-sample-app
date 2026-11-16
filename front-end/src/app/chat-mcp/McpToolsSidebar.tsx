@@ -1,14 +1,13 @@
 "use client";
 
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { BotIcon, InfoIcon, Loader2Icon, PencilIcon, PlugIcon, RefreshCwIcon, Trash2Icon, WrenchIcon } from "lucide-react";
+import { BotIcon, InfoIcon, Loader2Icon, PencilIcon, PlugIcon, RefreshCwIcon, WrenchIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   type AutomationProject,
-  deprovisionWorkflowReference,
   enableMcpIntegrationTool,
   enableMcpIntegrationWorkflow,
   enableMcpWorkflow,
@@ -125,9 +124,7 @@ function Section({ children, count, icon, title }: { children: ReactNode; count?
 
 export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
   const [activatingTemplateId, setActivatingTemplateId] = useState<string | null>(null);
-  const [connectingIntegrationId, setConnectingIntegrationId] = useState<string | null>(null);
-  const [deactivatingTemplateId, setDeactivatingTemplateId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [connectingIntegrationId, setConnectingIntegrationId] = useState<string | null>(null);  const [error, setError] = useState<string | null>(null);
   const [integrationDetails, setIntegrationDetails] = useState<Record<number, IntegrationDetails>>({});
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
@@ -241,37 +238,15 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
     [loadTools]
   );
 
-  const handleDeactivate = useCallback(
-    async (templateId: string, label: string | undefined) => {
-      if (!window.confirm(`Deactivate "${label ?? "this automation"}"? Its connections and inputs are removed.`)) {
-        return;
-      }
+  const openActivationDialog = useCallback(async (templateId: string) => {
+    setJwtToken(await getToken());
+    setActivatingTemplateId(templateId);
+  }, []);
 
-      setDeactivatingTemplateId(templateId);
-      setError(null);
-
-      try {
-        const response = await deprovisionWorkflowReference(templateId);
-
-        if (!response.ok) {
-          throw new Error(`the server answered ${response.status}`);
-        }
-
-        const [loadedWorkflows] = await Promise.all([fetchWorkflows(), loadTools()]);
-
-        setWorkflows(loadedWorkflows);
-      } catch (deactivateError) {
-        setError(
-          `Could not deactivate the automation: ${
-            deactivateError instanceof Error ? deactivateError.message : String(deactivateError)
-          }`
-        );
-      } finally {
-        setDeactivatingTemplateId(null);
-      }
-    },
-    [loadTools]
-  );
+  const openConnectDialog = useCallback(async (integrationId: number) => {
+    setJwtToken(await getToken());
+    setConnectingIntegrationId(String(integrationId));
+  }, []);
 
   const loadIntegrationDetails = useCallback(async (integrationIds: number[]) => {
     const loadedDetails = await Promise.all(integrationIds.map((integrationId) => fetchIntegration(integrationId)));
@@ -401,7 +376,7 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
                               aria-label={`Edit ${workflow.label}`}
                               className="size-7 text-gray-500 hover:text-gray-900"
                               disabled={!jwtToken}
-                              onClick={() => setActivatingTemplateId(editableTemplateId)}
+                              onClick={() => void openActivationDialog(editableTemplateId)}
                               size="icon"
                               title="Edit"
                               variant="ghost"
@@ -409,21 +384,6 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
                               <PencilIcon className="size-3.5" />
                             </Button>
                           )}
-
-                          {editableTemplateId !== undefined && (
-                            <Button
-                              aria-label={`Deactivate ${workflow.label}`}
-                              className="size-7 text-gray-500 hover:text-red-600"
-                              disabled={!jwtToken || deactivatingTemplateId === editableTemplateId}
-                              onClick={() => void handleDeactivate(editableTemplateId, workflow.label)}
-                              size="icon"
-                              title="Deactivate"
-                              variant="ghost"
-                            >
-                              <Trash2Icon className="size-3.5" />
-                            </Button>
-                          )}
-
                           <Switch
                             aria-label={`Available to AI agents: ${workflow.label}`}
                             checked={workflow.mcpEnabled === true}
@@ -439,7 +399,7 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
                           <Button
                             className="h-7 text-xs"
                             disabled={!jwtToken}
-                            onClick={() => setConnectingIntegrationId(String(missingIntegrationId))}
+                            onClick={() => void openConnectDialog(missingIntegrationId)}
                             size="sm"
                             variant="outline"
                           >
@@ -466,7 +426,7 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
                         <Button
                           className="h-7 shrink-0 text-xs"
                           disabled={!jwtToken}
-                          onClick={() => setActivatingTemplateId(template.id)}
+                          onClick={() => void openActivationDialog(template.id)}
                           size="sm"
                         >
                           Activate
@@ -507,7 +467,7 @@ export function McpToolsSidebar({ className }: McpToolsSidebarProps) {
                         <Button
                           className={cn("h-7 shrink-0 text-xs", toolIntegration.connected && "text-green-700")}
                           disabled={!jwtToken}
-                          onClick={() => setConnectingIntegrationId(String(toolIntegration.id))}
+                          onClick={() => void openConnectDialog(toolIntegration.id)}
                           size="sm"
                           variant="outline"
                         >

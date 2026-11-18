@@ -11,7 +11,7 @@ import { getToken } from "@/lib/api";
 import { BYTECHEF_APP_BASE_URL, BYTECHEF_ENVIRONMENT } from "@/lib/config";
 import { useConnectDialog } from "@bytechef/embedded";
 import { CheckIcon, CopyIcon, Loader2Icon, RefreshCwIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type FlowType = "automation" | "integration";
 
@@ -77,7 +77,7 @@ interface IntegrationI {
   id?: number;
   integrationInstances?: IntegrationInstanceI[];
   name?: string;
-  workflows?: { label?: string; workflowUuid?: string }[];
+  workflows?: { label?: string; staticWebhookTrigger?: boolean; workflowUuid?: string }[];
 }
 
 interface IntegrationInstanceI {
@@ -359,6 +359,8 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
   const [integrationsLoading, setIntegrationsLoading] = useState(false);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
 
+  const integrationIdRef = useRef("");
+
   const loadIntegrations = useCallback(async () => {
     setIntegrationsLoading(true);
     setIntegrationsError(null);
@@ -374,7 +376,36 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
         return;
       }
 
-      setIntegrations((text ? JSON.parse(text) : []) as IntegrationI[]);
+      const integrationSummaries = (text ? JSON.parse(text) : []) as IntegrationI[];
+
+      const integrationDetails = await Promise.all(
+        integrationSummaries
+          .filter((integrationSummary) => integrationSummary.id != null)
+          .map(async (integrationSummary) => {
+            const detailResponse = await fetch(`/api/integrations/${integrationSummary.id}`);
+
+            return detailResponse.ok ? ((await detailResponse.json()) as IntegrationI) : null;
+          }),
+      );
+
+      const webhookIntegrations = integrationDetails.filter(
+        (integrationDetail): integrationDetail is IntegrationI =>
+          !!integrationDetail?.workflows?.some((workflow) => workflow.staticWebhookTrigger),
+      );
+
+      setIntegrations(webhookIntegrations);
+
+      const selectedIntegration =
+        webhookIntegrations.find((webhookIntegration) => String(webhookIntegration.id) === integrationIdRef.current) ??
+        webhookIntegrations[0] ??
+        null;
+
+      const selectedIntegrationId = selectedIntegration?.id != null ? String(selectedIntegration.id) : "";
+
+      integrationIdRef.current = selectedIntegrationId;
+
+      setIntegration(selectedIntegration);
+      setIntegrationId(selectedIntegrationId);
     } catch (loadError) {
       setIntegrationsError(loadError instanceof Error ? loadError.message : "Could not load integrations");
     } finally {
@@ -383,6 +414,8 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
   }, []);
 
   const loadIntegration = useCallback(async (id: string) => {
+    integrationIdRef.current = id;
+
     setIntegrationId(id);
     setIntegrationError(null);
     setEnableError(null);
@@ -462,7 +495,7 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
   }, [loadIntegrations]);
 
   const workflows: WebhookWorkflowI[] = (integration?.workflows ?? [])
-    .filter((workflow) => workflow.workflowUuid)
+    .filter((workflow) => workflow.workflowUuid && workflow.staticWebhookTrigger)
     .map((workflow) => {
       const instanceWorkflow = integrationInstance?.workflows?.find(
         (curInstanceWorkflow) => curInstanceWorkflow.workflowUuid === workflow.workflowUuid,
@@ -471,11 +504,10 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
       return {
         enabled: instanceWorkflow?.enabled ?? false,
         label: workflow.label,
-        staticWebhookUrl: instanceWorkflow?.staticWebhookUrl,
+        staticWebhookUrl: instanceWorkflow?.enabled ? instanceWorkflow.staticWebhookUrl : undefined,
         workflowUuid: workflow.workflowUuid!,
       };
-    })
-    .filter((workflow) => workflow.staticWebhookUrl || !workflow.enabled);
+    });
 
   return (
     <Card>
@@ -511,13 +543,11 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
                 onChange={(event) => loadIntegration(event.target.value)}
                 value={integrationId}
               >
-                <option value="">
-                  {integrationsLoading
-                    ? "Loading..."
-                    : integrations.length === 0
-                      ? "No active integrations"
-                      : "Select an integration"}
-                </option>
+                {integrations.length === 0 && (
+                  <option value="">
+                    {integrationsLoading ? "Loading..." : "No integrations with webhook workflows"}
+                  </option>
+                )}
 
                 {integrations.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -599,7 +629,20 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
         return;
       }
 
-      setAutomations((text ? JSON.parse(text) : []) as AutomationI[]);
+      const loadedAutomations = (text ? JSON.parse(text) : []) as AutomationI[];
+
+      const templateUuids = loadedAutomations
+        .filter(
+          (automation) =>
+            startsWithWebhookTrigger(automation) && automation.kind === "REFERENCE" && automation.automationUuid,
+        )
+        .map((automation) => automation.automationUuid!);
+
+      setAutomations(loadedAutomations);
+
+      setActivationTemplateId((currentTemplateUuid) =>
+        templateUuids.includes(currentTemplateUuid) ? currentTemplateUuid : (templateUuids[0] ?? ""),
+      );
     } catch (loadError) {
       setAutomationsError(loadError instanceof Error ? loadError.message : "Could not load automations");
     } finally {
@@ -692,13 +735,9 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
               onChange={(event) => setActivationTemplateId(event.target.value)}
               value={activationTemplateId}
             >
-              <option value="">
-                {automationsLoading
-                  ? "Loading..."
-                  : activatedTemplates.length === 0
-                    ? "No automations from the Automation Hub"
-                    : "Select an automation"}
-              </option>
+              {activatedTemplates.length === 0 && (
+                <option value="">{automationsLoading ? "Loading..." : "No automations from the Automation Hub"}</option>
+              )}
 
               {activatedTemplates.map((automation) => (
                 <option key={automation.automationUuid} value={automation.automationUuid}>

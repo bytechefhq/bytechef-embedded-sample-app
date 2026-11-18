@@ -59,6 +59,16 @@ interface AutomationI {
   workflowUuid?: string;
 }
 
+interface AutomationHubProjectI {
+  workflowTemplates?: { components?: { name?: string }[]; id?: string; label?: string }[];
+}
+
+interface WebhookTemplateI {
+  activated: boolean;
+  id: string;
+  label?: string;
+}
+
 function startsWithWebhookTrigger(automation: AutomationI): boolean {
   if (automation.staticWebhookUrl) {
     return true;
@@ -551,13 +561,13 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
 
                 {integrations.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.name || `Integration ${item.id}`}
+                    {`${item.name || `Integration ${item.id}`}${item.integrationInstances?.length ? "" : " (not connected)"}`}
                   </option>
                 ))}
               </select>
             </div>
 
-            <Button disabled={!integrationInstance} onClick={openConnectDialog} type="button" variant="outline">
+            <Button disabled={!integration} onClick={openConnectDialog} type="button" variant="outline">
               Open Connect Dialog
             </Button>
           </div>
@@ -569,8 +579,8 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
 
         {integration && !integrationInstance && (
           <p className="text-sm text-muted-foreground">
-            The demo user hasn&rsquo;t connected this integration yet. Connect it on the <strong>Integrations</strong>{" "}
-            page first.
+            The demo user hasn&rsquo;t connected this integration yet. Click <strong>Open Connect Dialog</strong> to
+            connect it, or connect it on the <strong>Integrations</strong> page.
           </p>
         )}
 
@@ -613,35 +623,58 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
   const [activationDialogTemplateId, setActivationDialogTemplateId] = useState<string | null>(null);
   const [activationTemplateId, setActivationTemplateId] = useState("");
   const [jwtToken, setJwtToken] = useState<string | null>(null);
+  const [webhookTemplates, setWebhookTemplates] = useState<WebhookTemplateI[]>([]);
 
   const loadAutomations = useCallback(async () => {
     setAutomationsLoading(true);
     setAutomationsError(null);
 
     try {
-      const response = await fetch("/api/automation/workflows");
+      const [workflowsResponse, projectsResponse] = await Promise.all([
+        fetch("/api/automation/workflows"),
+        fetch("/api/automation/projects"),
+      ]);
 
-      const text = await response.text();
+      const workflowsText = await workflowsResponse.text();
+      const projectsText = await projectsResponse.text();
 
-      if (!response.ok) {
-        setAutomationsError(formatBody(text) || `HTTP ${response.status}`);
+      if (!workflowsResponse.ok || !projectsResponse.ok) {
+        setAutomationsError(
+          formatBody(workflowsResponse.ok ? projectsText : workflowsText) ||
+            `HTTP ${workflowsResponse.ok ? projectsResponse.status : workflowsResponse.status}`,
+        );
 
         return;
       }
 
-      const loadedAutomations = (text ? JSON.parse(text) : []) as AutomationI[];
+      const loadedAutomations = (workflowsText ? JSON.parse(workflowsText) : []) as AutomationI[];
+      const automationHubProjects = (projectsText ? JSON.parse(projectsText) : []) as AutomationHubProjectI[];
 
-      const templateUuids = loadedAutomations
+      const activatedTemplateUuids = new Set(
+        loadedAutomations
+          .filter((automation) => automation.kind === "REFERENCE" && automation.automationUuid)
+          .map((automation) => automation.automationUuid!),
+      );
+
+      const loadedWebhookTemplates: WebhookTemplateI[] = automationHubProjects
+        .flatMap((automationHubProject) => automationHubProject.workflowTemplates ?? [])
         .filter(
-          (automation) =>
-            startsWithWebhookTrigger(automation) && automation.kind === "REFERENCE" && automation.automationUuid,
+          (workflowTemplate) =>
+            workflowTemplate.id && workflowTemplate.components?.some((component) => component.name === "webhook"),
         )
-        .map((automation) => automation.automationUuid!);
+        .map((workflowTemplate) => ({
+          activated: activatedTemplateUuids.has(workflowTemplate.id!),
+          id: workflowTemplate.id!,
+          label: workflowTemplate.label,
+        }));
 
       setAutomations(loadedAutomations);
+      setWebhookTemplates(loadedWebhookTemplates);
 
-      setActivationTemplateId((currentTemplateUuid) =>
-        templateUuids.includes(currentTemplateUuid) ? currentTemplateUuid : (templateUuids[0] ?? ""),
+      setActivationTemplateId((currentTemplateId) =>
+        loadedWebhookTemplates.some((webhookTemplate) => webhookTemplate.id === currentTemplateId)
+          ? currentTemplateId
+          : (loadedWebhookTemplates[0]?.id ?? ""),
       );
     } catch (loadError) {
       setAutomationsError(loadError instanceof Error ? loadError.message : "Could not load automations");
@@ -690,10 +723,6 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
 
   const webhookAutomations = automations.filter(startsWithWebhookTrigger);
 
-  const activatedTemplates = webhookAutomations.filter(
-    (automation) => automation.kind === "REFERENCE" && automation.automationUuid,
-  );
-
   const workflows: WebhookWorkflowI[] = webhookAutomations
     .filter((automation) => automation.workflowUuid)
     .map((automation) => ({
@@ -730,18 +759,20 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
 
             <select
               className="h-10 rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
-              disabled={automationsLoading || activatedTemplates.length === 0}
+              disabled={automationsLoading || webhookTemplates.length === 0}
               id="activationTemplateId"
               onChange={(event) => setActivationTemplateId(event.target.value)}
               value={activationTemplateId}
             >
-              {activatedTemplates.length === 0 && (
-                <option value="">{automationsLoading ? "Loading..." : "No automations from the Automation Hub"}</option>
+              {webhookTemplates.length === 0 && (
+                <option value="">
+                  {automationsLoading ? "Loading..." : "No webhook automations in the Automation Hub"}
+                </option>
               )}
 
-              {activatedTemplates.map((automation) => (
-                <option key={automation.automationUuid} value={automation.automationUuid}>
-                  {automation.label || "Untitled"}
+              {webhookTemplates.map((webhookTemplate) => (
+                <option key={webhookTemplate.id} value={webhookTemplate.id}>
+                  {`${webhookTemplate.label || "Untitled"}${webhookTemplate.activated ? "" : " (not activated)"}`}
                 </option>
               ))}
             </select>
@@ -760,8 +791,9 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
 
         {!automationsLoading && !automationsError && workflows.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            The demo user has no automations that start with a webhook trigger yet. Click <strong>Use</strong> on a
-            webhook template in the <strong>Automation Hub</strong> page first.
+            The demo user has no automations that start with a webhook trigger yet. Pick one above and click{" "}
+            <strong>Open Activation Dialog</strong> to activate it, or click <strong>Use</strong> on it in the{" "}
+            <strong>Automation Hub</strong> page.
           </p>
         )}
 

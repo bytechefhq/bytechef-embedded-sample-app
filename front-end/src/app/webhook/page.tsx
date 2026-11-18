@@ -1,5 +1,6 @@
 "use client";
 
+import { ActivationDialogOpener } from "@/components/activation-dialog-opener";
 import { PrepareWorkflowCard } from "@/components/playground/prepare-workflow-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +50,9 @@ const exampleBody = {
 };
 
 interface AutomationI {
+  automationUuid?: string;
   enabled?: boolean;
+  kind?: "COPY" | "REFERENCE";
   label?: string;
   staticWebhookUrl?: string;
   workflowUuid?: string;
@@ -154,8 +157,8 @@ export default function WebhookPage() {
         description={
           <>
             A workflow that starts with the <strong>Webhook</strong> trigger gets its own URL for every connected user.
-            Anything that can send an HTTP request, for example a link in an email or another service, can start it.
-            No token is needed.
+            Anything that can send an HTTP request, for example a link in an email or another service, can start it. No
+            token is needed.
           </>
         }
         sampleWorkflowJson={sampleWorkflowJson}
@@ -175,10 +178,9 @@ export default function WebhookPage() {
             <CardTitle>3. Call the Webhook</CardTitle>
 
             <CardDescription>
-              Sends <code>POST</code> to the webhook URL from this app&rsquo;s server, the way an outside service
-              would. The <strong>Auto Respond</strong> trigger answers right away with the response it is configured
-              with, here <code>202</code> and <code>{`{"received": true}`}</code>, and runs the workflow in the
-              background.
+              Sends <code>POST</code> to the webhook URL from this app&rsquo;s server, the way an outside service would.
+              The <strong>Auto Respond</strong> trigger answers right away with the response it is configured with, here{" "}
+              <code>202</code> and <code>{`{"received": true}`}</code>, and runs the workflow in the background.
             </CardDescription>
           </CardHeader>
 
@@ -260,8 +262,8 @@ function IntegrationSteps() {
   return (
     <>
       <li>
-        In ByteChef, open <strong>Embedded &rsaquo; Integrations</strong> and create an integration for a component
-        with a connection.
+        In ByteChef, open <strong>Embedded &rsaquo; Integrations</strong> and create an integration for a component with
+        a connection.
       </li>
 
       <li>
@@ -316,8 +318,9 @@ function AutomationSteps() {
       </li>
 
       <li>
-        In step 2, enable the automation and copy its webhook URL. In the Automation Hub the connected user can copy it
-        from the card&rsquo;s <strong>&#8942;</strong> menu, with <strong>Copy webhook URL</strong>.
+        In step 2, enable the automation and copy its webhook URL. The connected user can copy it in the{" "}
+        <strong>Activation Dialog</strong>, opened here with <strong>Open Activation Dialog</strong>, or in the
+        Automation Hub from the card&rsquo;s <strong>&#8942;</strong> menu, with <strong>Copy webhook URL</strong>.
       </li>
     </>
   );
@@ -409,7 +412,7 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
     try {
       const response = await fetch(
         `/api/integration-instances/${integrationInstance.id}/workflows/${encodeURIComponent(workflowUuid)}/enable`,
-        { method: "POST" }
+        { method: "POST" },
       );
 
       if (!response.ok) {
@@ -421,7 +424,7 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
       await loadIntegration(integrationId);
     } catch (enableWorkflowError) {
       setEnableError(
-        enableWorkflowError instanceof Error ? enableWorkflowError.message : "Could not enable the workflow"
+        enableWorkflowError instanceof Error ? enableWorkflowError.message : "Could not enable the workflow",
       );
     } finally {
       setEnablingWorkflowUuid(null);
@@ -447,7 +450,7 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
     .filter((workflow) => workflow.workflowUuid)
     .map((workflow) => {
       const instanceWorkflow = integrationInstance?.workflows?.find(
-        (curInstanceWorkflow) => curInstanceWorkflow.workflowUuid === workflow.workflowUuid
+        (curInstanceWorkflow) => curInstanceWorkflow.workflowUuid === workflow.workflowUuid,
       );
 
       return {
@@ -559,6 +562,9 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
   const [automationsLoading, setAutomationsLoading] = useState(false);
   const [enableError, setEnableError] = useState<string | null>(null);
   const [enablingWorkflowUuid, setEnablingWorkflowUuid] = useState<string | null>(null);
+  const [activationDialogTemplateId, setActivationDialogTemplateId] = useState<string | null>(null);
+  const [activationTemplateId, setActivationTemplateId] = useState("");
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const loadAutomations = useCallback(async () => {
     setAutomationsLoading(true);
@@ -599,16 +605,31 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
       await loadAutomations();
     } catch (enableAutomationError) {
       setEnableError(
-        enableAutomationError instanceof Error ? enableAutomationError.message : "Could not enable the automation"
+        enableAutomationError instanceof Error ? enableAutomationError.message : "Could not enable the automation",
       );
     } finally {
       setEnablingWorkflowUuid(null);
     }
   };
 
+  const openActivationDialog = async () => {
+    setJwtToken(await getToken());
+    setActivationDialogTemplateId(activationTemplateId);
+  };
+
+  const closeActivationDialog = useCallback(() => {
+    setActivationDialogTemplateId(null);
+
+    loadAutomations();
+  }, [loadAutomations]);
+
   useEffect(() => {
     loadAutomations();
   }, [loadAutomations]);
+
+  const activatedTemplates = automations.filter(
+    (automation) => automation.kind === "REFERENCE" && automation.automationUuid,
+  );
 
   const workflows: WebhookWorkflowI[] = automations
     .filter((automation) => automation.workflowUuid)
@@ -627,8 +648,9 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
 
           <CardDescription>
             Lists the connected user&rsquo;s automations with <code>GET /api/embedded/v1/automation/workflows</code>.
-            Each automation that starts with a static webhook trigger carries its <code>staticWebhookUrl</code>, the same
-            URL the <strong>Automation Hub</strong> card copies with <strong>Copy webhook URL</strong>.
+            Each automation that starts with a static webhook trigger carries its <code>staticWebhookUrl</code>, the
+            same URL the connected user copies from the <strong>Activation Dialog</strong> or from the{" "}
+            <strong>Automation Hub</strong> card&rsquo;s <strong>Copy webhook URL</strong>.
           </CardDescription>
         </div>
 
@@ -639,6 +661,38 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
+        <div className="flex items-end gap-2">
+          <div className="flex flex-1 flex-col gap-2">
+            <Label htmlFor="activationTemplateId">Automation</Label>
+
+            <select
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
+              disabled={automationsLoading || activatedTemplates.length === 0}
+              id="activationTemplateId"
+              onChange={(event) => setActivationTemplateId(event.target.value)}
+              value={activationTemplateId}
+            >
+              <option value="">
+                {automationsLoading
+                  ? "Loading..."
+                  : activatedTemplates.length === 0
+                    ? "No automations from the Automation Hub"
+                    : "Select an automation"}
+              </option>
+
+              {activatedTemplates.map((automation) => (
+                <option key={automation.automationUuid} value={automation.automationUuid}>
+                  {automation.label || "Untitled"}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Button disabled={!activationTemplateId} onClick={openActivationDialog} type="button" variant="outline">
+            Open Activation Dialog
+          </Button>
+        </div>
+
         {automationsLoading && <p className="text-sm text-muted-foreground">Loading automations...</p>}
 
         {automationsError && <ErrorBlock message={automationsError} />}
@@ -659,6 +713,14 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
             onSelect={onSelect}
             selectedWebhookUrl={selectedWebhookUrl}
             workflows={workflows}
+          />
+        )}
+
+        {activationDialogTemplateId && jwtToken && (
+          <ActivationDialogOpener
+            jwtToken={jwtToken}
+            onDone={closeActivationDialog}
+            workflowTemplateId={activationDialogTemplateId}
           />
         )}
       </CardContent>
@@ -699,9 +761,7 @@ function WebhookWorkflowList({
                 </span>
               ) : (
                 <span className="text-xs text-muted-foreground">
-                  {enabled
-                    ? "Doesn't start with a webhook trigger."
-                    : "Enable the workflow to get its webhook URL."}
+                  {enabled ? "Doesn't start with a webhook trigger." : "Enable the workflow to get its webhook URL."}
                 </span>
               )}
             </div>

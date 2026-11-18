@@ -51,11 +51,26 @@ const exampleBody = {
 
 interface AutomationI {
   automationUuid?: string;
+  definition?: string;
   enabled?: boolean;
   kind?: "COPY" | "REFERENCE";
   label?: string;
   staticWebhookUrl?: string;
   workflowUuid?: string;
+}
+
+function startsWithWebhookTrigger(automation: AutomationI): boolean {
+  if (automation.staticWebhookUrl) {
+    return true;
+  }
+
+  try {
+    const { triggers } = JSON.parse(automation.definition ?? "{}") as { triggers?: { type?: string }[] };
+
+    return (triggers ?? []).some((trigger) => trigger.type?.startsWith("webhook/"));
+  } catch {
+    return false;
+  }
 }
 
 interface IntegrationI {
@@ -459,7 +474,8 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
         staticWebhookUrl: instanceWorkflow?.staticWebhookUrl,
         workflowUuid: workflow.workflowUuid!,
       };
-    });
+    })
+    .filter((workflow) => workflow.staticWebhookUrl || !workflow.enabled);
 
   return (
     <Card>
@@ -531,7 +547,9 @@ function IntegrationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardP
         {enableError && <ErrorBlock message={enableError} />}
 
         {integration && workflows.length === 0 && (
-          <p className="text-sm text-muted-foreground">This integration has no workflows.</p>
+          <p className="text-sm text-muted-foreground">
+            This integration has no workflows that start with a webhook trigger.
+          </p>
         )}
 
         {integrationInstance && workflows.length > 0 && (
@@ -627,11 +645,13 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
     loadAutomations();
   }, [loadAutomations]);
 
-  const activatedTemplates = automations.filter(
+  const webhookAutomations = automations.filter(startsWithWebhookTrigger);
+
+  const activatedTemplates = webhookAutomations.filter(
     (automation) => automation.kind === "REFERENCE" && automation.automationUuid,
   );
 
-  const workflows: WebhookWorkflowI[] = automations
+  const workflows: WebhookWorkflowI[] = webhookAutomations
     .filter((automation) => automation.workflowUuid)
     .map((automation) => ({
       enabled: automation.enabled ?? false,
@@ -701,8 +721,8 @@ function AutomationWebhooksCard({ onSelect, selectedWebhookUrl }: WebhooksCardPr
 
         {!automationsLoading && !automationsError && workflows.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            The demo user has no automations yet. Click <strong>Use</strong> on a template in the{" "}
-            <strong>Automation Hub</strong> page first.
+            The demo user has no automations that start with a webhook trigger yet. Click <strong>Use</strong> on a
+            webhook template in the <strong>Automation Hub</strong> page first.
           </p>
         )}
 
@@ -760,9 +780,7 @@ function WebhookWorkflowList({
                   {staticWebhookUrl}
                 </span>
               ) : (
-                <span className="text-xs text-muted-foreground">
-                  {enabled ? "Doesn't start with a webhook trigger." : "Enable the workflow to get its webhook URL."}
-                </span>
+                <span className="text-xs text-muted-foreground">Enable the workflow to get its webhook URL.</span>
               )}
             </div>
 
